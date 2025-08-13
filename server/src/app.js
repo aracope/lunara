@@ -7,7 +7,7 @@ import healthRouter from './routes/health.js';
 import { notFound, errorHandler } from './middleware/error.js';
 import authRouter from './routes/auth.js';
 import journalRouter from './routes/journal.js';
-
+import moonRouter from './routes/moon.js';
 
 const app = express();
 
@@ -21,6 +21,7 @@ app.use(cookieParser());
 app.use('/health', healthRouter);
 app.use('/auth', authRouter);
 app.use('/journal', journalRouter);
+app.use('/moon', moonRouter);
 
 // 404 + errors
 app.use(notFound);

@@ -4,6 +4,8 @@ export const PORT = process.env.PORT || 3001;
 export const DB_URL = process.env.DB_URL || process.env.DATABASE_URL; // support either name
 export const JWT_SECRET = process.env.JWT_SECRET || 'change-me';
 export const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
+export const MOON_API_URL  = process.env.MOON_API_URL  || 'https://api.ipgeolocation.io/astronomy';
+export const MOON_API_KEY  = process.env.MOON_API_KEY  || '';
 
 if (!DB_URL) {
   console.error('Missing DB_URL in environment');
