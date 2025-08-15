@@ -6,11 +6,13 @@ export const JWT_SECRET = process.env.JWT_SECRET || 'change-me';
 export const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
 export const MOON_API_URL  = process.env.MOON_API_URL  || 'https://api.ipgeolocation.io/astronomy';
 export const MOON_API_KEY  = process.env.MOON_API_KEY  || '';
+export const TAROT_API_BASE = process.env.TAROT_API_BASE || 'http://localhost:5001';
+
 
 if (!DB_URL) {
   console.error('Missing DB_URL in environment');
   process.exit(1);
 }
 if (!JWT_SECRET || JWT_SECRET === 'change-me') {
-  console.warn('⚠️  Using default JWT_SECRET. Set a strong value in .env.');
+  console.warn('  Using default JWT_SECRET. Set a strong value in .env.');
 }
