@@ -1,12 +1,19 @@
+// src/App.jsx
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import NavBar from './components/NavBar.jsx';
 
+import './App.css';
+import './styles/variables.css';
+import './styles/base.css';
+import './styles/utilities.css';
+import './styles/forms.css';
+
 export default function App() {
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', minHeight: '100vh' }}>
+    <div id="navbar" className="app-root">
       <NavBar />
-      <main style={{ maxWidth: 900, margin: '2rem auto', padding: '0 1rem' }}>
+      <main className="app-main">
         <Outlet />
       </main>
     </div>

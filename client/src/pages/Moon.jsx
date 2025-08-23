@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { api } from '../lib/apiClient.js';
+import './Moon.css';
 
 export default function Moon() {
   const [lat, setLat] = useState('43.62');
@@ -12,12 +13,21 @@ export default function Moon() {
   return (
     <section>
       <h1>Moon</h1>
-      <form onSubmit={fetchMoon} style={{ display: 'flex', gap: 8 }}>
-        <input value={lat} onChange={e => setLat(e.target.value)} placeholder="lat" />
-        <input value={lon} onChange={e => setLon(e.target.value)} placeholder="lon" />
+      <form onSubmit={fetchMoon} className="moon-form">
+        <input
+          value={lat}
+          onChange={e => setLat(e.target.value)}
+          placeholder="lat"
+        />
+        <input
+          value={lon}
+          onChange={e => setLon(e.target.value)}
+          placeholder="lon"
+        />
         <button>Fetch</button>
       </form>
       <pre>{JSON.stringify(data, null, 2)}</pre>
     </section>
   );
 }
+

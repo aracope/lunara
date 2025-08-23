@@ -1,0 +1,5 @@
+.journal-form {
+  display: grid;
+  gap: var(--gap-2, 8px);
+  max-width: 420px;
+}

@@ -10,9 +10,9 @@ export default function Signup() {
   async function onSubmit(e) {
     e.preventDefault();
     try {
-      await api.signup(email, password, displayName);
-      const me = await api.me();
-      setMsg(`Registered as ${me?.user?.email}`);
+      const res = await api.signup(email, password, displayName);
+      setMsg(`Registered as ${res?.user?.email || email}`);
+
     } catch (err) {
       setMsg(err.message);
     }

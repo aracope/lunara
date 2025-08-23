@@ -1,0 +1,39 @@
+.navbar-header {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.navbar {
+  display: flex;
+  gap: 12px;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  margin-right: auto;
+  text-decoration: none;
+  color: inherit;
+}
+
+.nav-link {
+  padding: 0.5rem 0.75rem;
+  text-decoration: none;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+}
+
+.nav-link.active {
+  background: #e5e7eb;
+}
+
+.navbar-user {
+  align-self: center;
+  opacity: 0.8;
+}
+
+.logout-btn {
+  padding: 0.4rem 0.6rem;
+}

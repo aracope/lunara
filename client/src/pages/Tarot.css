@@ -1,0 +1,9 @@
+.tarot-actions {
+  display: flex;
+  gap: var(--gap-3, 12px);
+  flex-wrap: wrap;
+}
+
+.tarot-qid-input {
+  width: 80px;
+}
