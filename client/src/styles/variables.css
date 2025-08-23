@@ -1,6 +1,16 @@
 :root {
+  --bg: #1D1A31;
+  --fg: #BFB1C1;
   --danger: crimson;
-  --gap-2: 8px;
   --container: 900px;
-  --border-subtle: #e5e7eb;
+  --gap-1: 4px;
+  --gap-2: 8px;
+  --gap-3: 12px;
+  --border-subtle: #B5BEC6;
+
+  --color1: #364652;
+  --color3: #BFB1C1;
+  --color4: #B5BEC6;
+  --color5: #C7DBE6;
+
 }

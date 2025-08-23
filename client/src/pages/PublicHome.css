@@ -1,5 +1,5 @@
 .home {
-    max-width: var(--container, 900px);
+    max-width: var(--container);
     margin: 2rem auto;
     padding: 0 1rem;
 }
@@ -13,11 +13,11 @@
 
 .home-title {
     font-size: clamp(2rem, 5vw, 3rem);
-    margin: 0;
+    
 }
 
 .home-subtitle {
-    margin: 0;
+    
     opacity: 0.9;
 }
 
@@ -28,14 +28,13 @@
     flex-wrap: wrap;
 }
 
-/* Minimal button look that works with your theme */
 .btn {
     display: inline-block;
     padding: 0.6rem 0.9rem;
     border-radius: 8px;
     text-decoration: none;
-    color: var(--bg, #1D1A31);
-    background: var(--fg, #C1A5A9);
+    color: var(--bg);
+    background: var(--fg);
     font-weight: 600;
 }
 
@@ -49,8 +48,8 @@
 
 .btn-outline {
     background: transparent;
-    color: var(--fg, #C1A5A9);
-    border: 1px solid var(--fg, #C1A5A9);
+    color: var(--fg);
+    border: 1px solid var(--fg);
 }
 
 /* Feature cards */
@@ -61,7 +60,7 @@
 }
 
 .home-card {
-    border: 1px solid var(--border-subtle, #e5e7eb20);
+    border: 1px solid var(--border-subtle);
     border-radius: 12px;
     padding: 1rem;
     display: grid;
@@ -71,7 +70,7 @@
 
 .card-link {
     text-decoration: none;
-    color: var(--fg, #C1A5A9);
+    color: var(--fg);
 }
 
 .card-link:hover {
@@ -83,7 +82,7 @@
 }
 
 .home {
-    max-width: var(--container, 900px);
+    max-width: var(--container);
     margin: 2rem auto;
     padding: 0 1rem;
 }
@@ -97,11 +96,11 @@
 
 .home-title {
     font-size: clamp(2rem, 5vw, 3rem);
-    margin: 0;
+    
 }
 
 .home-subtitle {
-    margin: 0;
+    
     opacity: 0.9;
 }
 
@@ -117,8 +116,8 @@
     padding: 0.6rem 0.9rem;
     border-radius: 8px;
     text-decoration: none;
-    color: var(--bg, #1D1A31);
-    background: var(--fg, #C1A5A9);
+    color: var(--bg);
+    background: var(--fg);
     font-weight: 600;
 }
 
@@ -132,8 +131,8 @@
 
 .btn-outline {
     background: transparent;
-    color: var(--fg, #C1A5A9);
-    border: 1px solid var(--fg, #C1A5A9);
+    color: var(--fg);
+    border: 1px solid var(--fg);
 }
 
 /* Feature cards */
@@ -144,7 +143,7 @@
 }
 
 .home-card {
-    border: 1px solid var(--border-subtle, #e5e7eb20);
+    border: 1px solid var(--border-subtle);
     border-radius: 12px;
     padding: 1rem;
     display: grid;
@@ -154,7 +153,7 @@
 
 .card-link {
     text-decoration: none;
-    color: var(--fg, #C1A5A9);
+    color: var(--fg);
 }
 
 .card-link:hover {
