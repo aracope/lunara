@@ -1,45 +1,104 @@
-import { TAROT_API_BASE } from '../config.js';
+import { TAROT_API_BASE } from "../config.js";
+
+if (!TAROT_API_BASE) {
+  throw new Error("TAROT_API_BASE is not set");
+}
 
 const DEFAULT_TIMEOUT_MS = 15000;
 
 function withTimeout(ms, promise) {
   return Promise.race([
     promise,
-    new Promise((_, reject) => setTimeout(() => reject(new Error('Upstream timeout')), ms))
+    new Promise((_, reject) => {
+      const err = new Error("Upstream timeout");
+      err.status = 504;
+      setTimeout(() => reject(err), ms);
+    }),
   ]);
 }
 
-async function jsonFetch(path, options = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
-  const url = new URL(path, TAROT_API_BASE).toString();
-  const resp = await withTimeout(timeoutMs, fetch(url, {
-    headers: { 'Accept': 'application/json', ...(options.headers || {}) },
-    ...options,
-  }));
-  if (!resp.ok) {
-    const text = await resp.text().catch(() => '');
-    const err = new Error(`Tarot API ${resp.status}`);
-    err.status = 502;
-    err.body = text;
-    throw err;
+async function jsonFetch(
+  path,
+  { method = "GET", headers = {}, body, timeoutMs = DEFAULT_TIMEOUT_MS } = {}
+) {
+  const attempt = async () => {
+    const url = new URL(path, TAROT_API_BASE).toString();
+    const resp = await withTimeout(
+      timeoutMs,
+      fetch(url, { method, headers: { Accept: "application/json", ...headers }, body })
+    );
+
+    const ct = resp.headers.get("content-type") || "";
+    const isJson = ct.includes("application/json");
+    const data = isJson ? await resp.json().catch(() => ({})) : await resp.text();
+
+    if (!resp.ok) {
+      const err = new Error(
+        typeof data === "object" && data?.error ? data.error : `Tarot API error ${resp.status}`
+      );
+      err.status = resp.status;
+      err.data = data;
+      throw err;
+    }
+    return data;
+  };
+
+  try {
+    return await attempt();
+  } catch (e) {
+    if ([429, 502, 503, 504].includes(e.status)) {
+      await new Promise((r) => setTimeout(r, 300));
+      return attempt();
+    }
+    throw e;
   }
-  return resp.json();
 }
 
-export async function getCardOfDay() {
-  // Adjust endpoint to match your Flask routes (example: /api/tarot/daily)
-  return jsonFetch('/api/tarot/daily');
+/**
+ * Get deterministic daily card. Supports optional { seed, date } -> query params.
+ * If omitted, backend returns a global (non-user-specific) daily card for today.
+ */
+export async function getCardOfDay({ seed, date } = {}) {
+  const qs = new URLSearchParams();
+  if (seed != null && String(seed).length) qs.set("seed", String(seed));
+  if (date != null && String(date).length) qs.set("date", String(date));
+  const suffix = qs.toString() ? `/daily?${qs}` : "/daily";
+  return jsonFetch(suffix);
 }
 
-export async function drawYesNo() {
-  // If your Flask expects POST, send POST; if GET, switch accordingly.
-  return jsonFetch('/api/tarot/yesno', { method: 'POST' });
+/**
+ * Yes/No/Maybe draw. If a question is provided, POST it; otherwise prefer GET.
+ * Falls back to POST for APIs that only accept POST.
+ */
+export async function drawYesNo(payload) {
+  if (payload?.question) {
+    return jsonFetch("/yesno", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: payload.question }),
+    });
+  }
+
+  try {
+    return await jsonFetch("/yesno"); // GET
+  } catch (e) {
+    if (e.status === 405) {
+      return jsonFetch("/yesno", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+    }
+    throw e;
+  }
 }
 
 export async function getCardById(id) {
-  if (!Number.isInteger(Number(id))) {
-    const e = new Error('Invalid id');
+  const n = Number(id);
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0) {
+    const e = new Error("Invalid id");
     e.status = 400;
     throw e;
   }
-  return jsonFetch(`/api/tarot/cards/${id}`);
+  return jsonFetch(`/cards/${n}`);
 }
