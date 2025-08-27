@@ -1,0 +1,34 @@
+.metal-text {
+    background: linear-gradient(-18deg,
+            var(--metal-a) 0%,
+            var(--metal-b) 14%,
+            var(--metal-c) 28%,
+            var(--metal-d) 48%,
+            var(--metal-e) 72%,
+            var(--metal-b) 90%,
+            var(--metal-a) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow:
+        0 1px 0 rgba(255, 255, 255, .28),
+        0 -1px 0 rgba(0, 0, 0, .25),
+        0 0 14px rgba(255, 255, 255, .06);
+    filter: contrast(106%) saturate(108%);
+}
+
+
+.metal-text.sheen {
+    background-size: 200% 100%;
+    animation: metal-sweep 4s linear infinite;
+}
+
+@keyframes metal-sweep {
+    from {
+        background-position: 0% 0;
+    }
+
+    to {
+        background-position: 200% 0;
+    }
+}

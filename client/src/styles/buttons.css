@@ -1,0 +1,135 @@
+/* base */
+.btn {
+    position: relative;
+    /* for sheen pseudo-element */
+    overflow: hidden;
+    display: inline-block;
+    padding: var(--btn-py) var(--btn-px);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    font-weight: 600;
+    transition: box-shadow .2s ease, transform .1s ease, opacity .2s ease;
+}
+
+/* light “brand” button (uses --fg as fill) */
+.btn--brand {
+    color: var(--bg);
+    background: var(--fg);
+}
+
+.btn--brand:hover {
+    opacity: 0.95;
+}
+
+.btn--brand:active {
+    transform: translateY(1px);
+}
+
+/* outline */
+.btn-outline {
+    background: transparent;
+    color: var(--fg);
+    border: 1px solid var(--fg);
+}
+
+.btn-outline:active {
+    transform: translateY(1px);
+}
+
+/* light metal surface */
+.btn--metal {
+    color: var(--bg);
+    background: linear-gradient(180deg,
+            var(--metal-c) 0%,
+            var(--metal-b) 22%,
+            var(--metal-d) 50%,
+            var(--metal-e) 78%,
+            var(--metal-b) 100%);
+    border: 1px solid rgba(255, 255, 255, .18);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .35),
+        inset 0 -1px 0 rgba(0, 0, 0, .25),
+        0 4px 10px rgba(0, 0, 0, .15);
+}
+
+.btn--metal::before {
+    content: "";
+    position: absolute;
+    inset: -20% -40%;
+    background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, .35) 50%, transparent 100%);
+    transform: translateX(-150%) skewX(-20deg);
+    transition: transform .6s ease;
+    mix-blend-mode: screen;
+    pointer-events: none;
+}
+
+.btn--metal:hover::before {
+    transform: translateX(150%) skewX(-20deg);
+}
+
+.btn--metal:active {
+    transform: translateY(1px);
+}
+
+/* dark metal surface */
+.btn--metal-dark {
+    color: var(--fg);
+    background: linear-gradient(180deg,
+            var(--metal-dark-0) 0%,
+            var(--metal-dark-1) 22%,
+            var(--metal-dark-2) 50%,
+            var(--metal-dark-1) 78%,
+            var(--metal-dark-3) 100%);
+    border: 1px solid rgba(255, 255, 255, .14);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .18),
+        inset 0 -1px 0 rgba(0, 0, 0, .35),
+        0 6px 16px rgba(0, 0, 0, .35);
+}
+
+.btn--metal-dark::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(90deg,
+            rgba(255, 255, 255, .03) 0,
+            rgba(255, 255, 255, .03) 1px,
+            transparent 2px,
+            transparent 6px);
+    pointer-events: none;
+}
+
+.btn--metal-dark::before {
+    content: "";
+    position: absolute;
+    inset: -20% -40%;
+    background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, .35) 50%, transparent 100%);
+    transform: translateX(-150%) skewX(-20deg);
+    transition: transform .7s ease;
+    mix-blend-mode: screen;
+    pointer-events: none;
+}
+
+.btn--metal-dark:hover::before {
+    transform: translateX(150%) skewX(-20deg);
+}
+
+.btn--metal-dark:active {
+    transform: translateY(1px);
+}
+
+/* a11y */
+.btn:focus-visible {
+    outline: 2px solid #e6e9ef;
+    outline-offset: 2px;
+}
+
+/* reduce motion */
+@media (prefers-reduced-motion: reduce) {
+
+    .btn--metal::before,
+    .btn--metal-dark::before {
+        transition: none;
+        transform: none;
+    }
+}

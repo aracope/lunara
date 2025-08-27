@@ -1,16 +1,39 @@
 :root {
-  --bg: #1D1A31;
-  --fg: #BFB1C1;
-  --danger: crimson;
-  --container: 900px;
-  --gap-1: 4px;
-  --gap-2: 8px;
-  --gap-3: 12px;
-  --border-subtle: #B5BEC6;
+    --bg: #2a1a31;
+    /* cool silver */
+    --fg: #C7CCD6;
+    /* lighter for subtle text */
+    --fg-muted: #D8DDE6;
+    /* ~10% opacity line on dark */
+    --border-subtle: #E6EBF41A;
+    --danger: crimson;
+    --container: 900px;
+    --gap-1: 4px;
+    --gap-2: 8px;
+    --gap-3: 12px;
 
-  --color1: #364652;
-  --color3: #BFB1C1;
-  --color4: #B5BEC6;
-  --color5: #C7DBE6;
+    /* spacing & radii */
+    --gap-1: 4px;
+    --gap-2: 8px;
+    --gap-3: 12px;
+    --radius-md: 8px;
+    --container: 900px;
 
+    /* buttons */
+    --btn-py: 0.6rem;
+    --btn-px: 0.9rem;
+
+    /* “metal” palettes */
+    /* Light silver (“metal text” & light metal buttons) */
+    --metal-a: #f2f5f8;
+    --metal-b: #cbd1dc;
+    --metal-c: #e9edf2;
+    --metal-d: #9ea6b3;
+    --metal-e: #dde2ea;
+
+    /* Dark metal (tuned toward plum-navy) */
+    --metal-dark-0: #3c2f47;
+    --metal-dark-1: #2f243c;
+    --metal-dark-2: #241a31;
+    --metal-dark-3: #1b1328;
 }

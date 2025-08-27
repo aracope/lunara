@@ -1,4 +1,12 @@
 body {
   background-color: var(--bg);
   color: var(--fg);
+  font-family: system-ui, sans-serif;
+}
+
+/* app-wide main layout */
+main {
+  max-width: var(--container);
+  margin: 2rem auto;
+  padding: 0 1rem;
 }

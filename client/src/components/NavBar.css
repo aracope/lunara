@@ -1,6 +1,11 @@
 .navbar-header {
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-subtle);
 }
+
+.muted {
+  color: var(--fg-muted);
+}
+
 
 .navbar {
   display: flex;

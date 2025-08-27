@@ -1,0 +1,73 @@
+/* Base surface hook */
+.surface {
+    position: relative;
+    overflow: hidden;
+    /* needed for sheen sweep */
+    border-radius: var(--radius-md, 8px);
+}
+
+/* Dark metal surface (cards, dark CTAs) */
+.surface--metal-dark {
+    color: var(--fg);
+    background: linear-gradient(180deg,
+            var(--metal-dark-0) 0%,
+            var(--metal-dark-1) 28%,
+            var(--metal-dark-2) 60%,
+            var(--metal-dark-1) 85%,
+            var(--metal-dark-3, #1b1328) 100%);
+    border: 1px solid rgba(255, 255, 255, .12);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .14),
+        inset 0 -1px 0 rgba(0, 0, 0, .35),
+        0 10px 28px rgba(0, 0, 0, .35);
+    transition: transform .15s ease, box-shadow .25s ease;
+}
+
+/* subtle brushed texture */
+.surface--metal-dark::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(90deg,
+            rgba(255, 255, 255, .03) 0,
+            rgba(255, 255, 255, .03) 1px,
+            transparent 2px,
+            transparent 6px);
+    pointer-events: none;
+}
+
+/* animated sheen sweep on hover */
+.surface--metal-dark::before {
+    content: "";
+    position: absolute;
+    inset: -20% -40%;
+    background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, .35) 50%, transparent 100%);
+    transform: translateX(-150%) skewX(-20deg);
+    transition: transform .7s ease;
+    mix-blend-mode: screen;
+    pointer-events: none;
+}
+
+.surface--metal-dark:hover::before {
+    transform: translateX(150%) skewX(-20deg);
+}
+
+.surface--metal-dark:hover {
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .18),
+        inset 0 -1px 0 rgba(0, 0, 0, .4),
+        0 14px 36px rgba(0, 0, 0, .45);
+    transform: translateY(-2px);
+}
+
+/* reduce motion */
+@media (prefers-reduced-motion: reduce) {
+    .surface--metal-dark::before {
+        transition: none;
+        transform: none;
+    }
+
+    .surface--metal-dark:hover {
+        transform: none;
+    }
+}

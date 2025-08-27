@@ -6,151 +6,150 @@
 
 .home-hero {
     text-align: center;
+    justify-items: center;
     display: grid;
-    gap: var(--gap-3, 12px);
+    gap: var(--gap-3);
     margin-bottom: 2rem;
 }
 
+/* --- Hero title enhancements --- */
 .home-title {
-    font-size: clamp(2rem, 5vw, 3rem);
-    
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5ch;
+    font-size: clamp(2.5rem, 8vw, 4rem);
+    letter-spacing: 0.02em;
+    line-height: 1.1;
 }
 
+/* Crescent moon badge with animated phases */
+.home-title__moon {
+    position: relative;
+    width: 1.15em;
+    height: 1.15em;
+    border-radius: 50%;
+    background: var(--fg);
+    /* lit silver disk */
+    box-shadow:
+        inset -6px -8px 12px rgba(0, 0, 0, .28),
+        inset 6px 8px 12px rgba(255, 255, 255, .18),
+        0 2px 10px rgba(0, 0, 0, .35);
+    overflow: hidden;
+    /* contain the moving shadow */
+    flex: 0 0 auto;
+    flex-shrink: 0;
+}
+
+/* Moving “shadow” disc that creates phases as it passes over */
+.home-title__moon::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--bg);
+    /* shadow color matches page bg */
+    transform: translateX(0%);
+    /* start at NEW (fully shadowed) */
+    box-shadow:
+        -6px 0 12px rgba(0, 0, 0, .45) inset,
+        6px 0 12px rgba(255, 255, 255, .12) inset;
+    /* soft limb */
+    animation: lunar-cycle-rtl var(--lunar-speed, 12s) linear infinite;
+    will-change: transform;
+}
+
+/* Optional: a subtle highlight texture over the lit surface */
+.home-title__moon::before {
+    content: "";
+    position: absolute;
+    inset: -8%;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 30% 30%, rgba(255, 255, 255, .25), transparent 60%),
+        radial-gradient(circle at 70% 70%, rgba(0, 0, 0, .12), transparent 55%);
+    pointer-events: none;
+    mix-blend-mode: screen;
+}
+
+/* Always moves right -> left:
+   NEW (center) -> FULL (off left) -> wrap to FULL (off right) -> NEW (center) */
+@keyframes lunar-cycle-rtl {
+    0% {
+        transform: translateX(0%);
+    }
+
+    /* NEW */
+    49.999% {
+        transform: translateX(-110%);
+    }
+
+    /* FULL (shadow off left) */
+    50% {
+        transform: translateX(110%);
+    }
+
+    /* jump to FULL (shadow off right) */
+    100% {
+        transform: translateX(0%);
+    }
+
+    /* back to NEW (moving right->left) */
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .home-title__moon::after {
+        animation: none;
+        transform: translateX(32%);
+    }
+
+    /* static crescent */
+}
+
+
 .home-subtitle {
-    
     opacity: 0.9;
 }
 
 .home-actions {
     display: flex;
-    gap: var(--gap-2, 8px);
+    gap: var(--gap-2);
     justify-content: center;
     flex-wrap: wrap;
 }
 
-.btn {
-    display: inline-block;
-    padding: 0.6rem 0.9rem;
-    border-radius: 8px;
-    text-decoration: none;
-    color: var(--bg);
-    background: var(--fg);
-    font-weight: 600;
-}
-
-.btn:hover {
-    opacity: 0.95;
-}
-
-.btn:active {
-    transform: translateY(1px);
-}
-
-.btn-outline {
-    background: transparent;
-    color: var(--fg);
-    border: 1px solid var(--fg);
-}
-
-/* Feature cards */
+/* Feature cards layout only; visuals come from .surface--metal-dark */
 .home-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: var(--gap-3, 12px);
+    gap: var(--gap-3);
+    grid-template-columns: 1fr;
+    /* phones: 1 per row */
+}
+
+@media (min-width: 640px) {
+
+    /* tablets: 2 across */
+    .home-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 960px) {
+
+    /* desktops: 3 across */
+    .home-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
 }
 
 .home-card {
-    border: 1px solid var(--border-subtle);
-    border-radius: 12px;
+    /* no border/background here */
     padding: 1rem;
     display: grid;
-    gap: var(--gap-2, 8px);
-    backdrop-filter: saturate(110%);
+    gap: var(--gap-2);
 }
 
-.card-link {
-    text-decoration: none;
-    color: var(--fg);
-}
-
-.card-link:hover {
-    text-decoration: underline;
-}
-
-.card-muted {
-    opacity: 0.7;
-}
-
-.home {
-    max-width: var(--container);
-    margin: 2rem auto;
-    padding: 0 1rem;
-}
-
-.home-hero {
-    text-align: center;
-    display: grid;
-    gap: var(--gap-3, 12px);
-    margin-bottom: 2rem;
-}
-
-.home-title {
-    font-size: clamp(2rem, 5vw, 3rem);
-    
-}
-
-.home-subtitle {
-    
-    opacity: 0.9;
-}
-
-.home-actions {
-    display: flex;
-    gap: var(--gap-2, 8px);
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.btn {
-    display: inline-block;
-    padding: 0.6rem 0.9rem;
-    border-radius: 8px;
-    text-decoration: none;
-    color: var(--bg);
-    background: var(--fg);
-    font-weight: 600;
-}
-
-.btn:hover {
-    opacity: 0.95;
-}
-
-.btn:active {
-    transform: translateY(1px);
-}
-
-.btn-outline {
-    background: transparent;
-    color: var(--fg);
-    border: 1px solid var(--fg);
-}
-
-/* Feature cards */
-.home-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: var(--gap-3, 12px);
-}
-
-.home-card {
-    border: 1px solid var(--border-subtle);
-    border-radius: 12px;
-    padding: 1rem;
-    display: grid;
-    gap: var(--gap-2, 8px);
-    backdrop-filter: saturate(110%);
-}
-
+/* Links */
 .card-link {
     text-decoration: none;
     color: var(--fg);

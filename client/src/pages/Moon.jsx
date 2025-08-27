@@ -95,7 +95,8 @@ export default function Moon() {
               onClick={useDeviceLocation}>Use my device</button>
           </>
         )}
-        <button disabled={loading}>{loading ? "Loading…" : "Fetch"}</button>
+        <button className="btn btn--metal" disabled={loading}>{loading ? "Loading…" : "Fetch"}
+        </button>
       </form>
 
       <pre>{JSON.stringify(data, null, 2)}</pre>
