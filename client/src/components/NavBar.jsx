@@ -26,11 +26,11 @@ export default function NavBar() {
             <span className="navbar-user">
               {user.display_name || user.email}
             </span>
-            <button onClick={logout} className="logout-btn">Logout</button>
+            <button onClick={logout} className="btn btn-outline logout-btn">Logout</button>
           </>
         ) : (
           <>
-            <NavLink to="/login" className={linkClass}>Login</NavLink>
+            <NavLink to="/login" className="nav-link login-link">Login</NavLink>
             <NavLink to="/signup" className={linkClass}>Sign Up</NavLink>
           </>
         )}

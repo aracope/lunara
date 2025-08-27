@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { api } from '../lib/apiClient.js';
 import './Moon.css';
+import MoonResult from '../components/MoonResult.jsx';
 
 export default function Moon() {
-  const [mode, setMode] = useState("place"); // 'place' | 'coords'
-  const [place, setPlace] = useState("Boise, ID");
+  const [mode, setMode] = useState('place'); // 'place' | 'coords' | 'ip'
+  const [place, setPlace] = useState('Boise, ID');
   const [lat, setLat] = useState('43.62');
   const [lon, setLon] = useState('-116.20');
   const [data, setData] = useState(null);
@@ -15,13 +16,12 @@ export default function Moon() {
     setLoading(true);
     try {
       let d;
-      if (mode === "place" && place.trim()) {
+      if (mode === 'place' && place.trim()) {
         d = await api.moonToday({ location: place.trim() });
-      } else if (mode === "coords") {
+      } else if (mode === 'coords') {
         d = await api.moonToday({ lat, lon });
       } else {
-        // server will pass req.ip to API
-        d = await api.moonToday({ useClientIp: "1" });
+        d = await api.moonToday({ useClientIp: '1' });
       }
       setData(d);
     } catch (err) {
@@ -32,13 +32,13 @@ export default function Moon() {
   }
 
   function useDeviceLocation() {
-    if (!("geolocation" in navigator)) {
-      setData({ error: "Geolocation not supported by this browser." });
+    if (!('geolocation' in navigator)) {
+      setData({ error: 'Geolocation not supported by this browser.' });
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setMode("coords");
+        setMode('coords');
         setLat(pos.coords.latitude.toFixed(4));
         setLon(pos.coords.longitude.toFixed(4));
       },
@@ -46,60 +46,97 @@ export default function Moon() {
       { enableHighAccuracy: false, timeout: 8000 }
     );
   }
+
+  const hasError = data && data.error;
+
   return (
     <section>
-      <h1>Moon</h1>
-      <div className="moon-switch">
-        <label>
+      <h1 className="metal-text">Moon</h1>
+
+      {/* mode switch */}
+      <fieldset className="moon-switch switch">
+        <legend className="sr-only">Choose input mode</legend>
+
+        <label className="chip">
           <input
             type="radio"
             name="mode"
             value="place"
-            checked={mode === "place"}
-            onChange={() => setMode("place")} /> City / place</label>
-        <label>
+            checked={mode === 'place'}
+            onChange={() => setMode('place')}
+          />
+          <span>City / place</span>
+        </label>
+
+        <label className="chip">
           <input
             type="radio"
             name="mode"
             value="coords"
-            checked={mode === "coords"}
-            onChange={() => setMode("coords")} /> Coordinates</label>
-        <label>
+            checked={mode === 'coords'}
+            onChange={() => setMode('coords')}
+          />
+          <span>Coordinates</span>
+        </label>
+
+        <label className="chip">
           <input
             type="radio"
             name="mode"
             value="ip"
-            checked={mode === "ip"}
-            onChange={() => setMode("ip")} /> Use my IP</label>
-      </div>
+            checked={mode === 'ip'}
+            onChange={() => setMode('ip')}
+          />
+          <span>Use my IP</span>
+        </label>
+      </fieldset>
 
-      <form onSubmit={fetchMoon} className="moon-form">
-        {mode === "place" && (
+      {/* inputs */}
+      <form onSubmit={fetchMoon} className="moon-form" aria-busy={loading}>
+        {mode === 'place' && (
           <input
             value={place}
-            onChange={e => setPlace(e.target.value)}
-            placeholder="e.g., Boise, ID or Paris, FR" />
+            onChange={(e) => setPlace(e.target.value)}
+            placeholder="e.g., Boise, ID or Paris, FR"
+            autoComplete="address-level2"
+          />
         )}
-        {mode === "coords" && (
+
+        {mode === 'coords' && (
           <>
             <input
               value={lat}
-              onChange={e => setLat(e.target.value)}
-              placeholder="latitude" />
+              onChange={(e) => setLat(e.target.value)}
+              placeholder="latitude"
+              inputMode="decimal"
+              autoComplete="off"
+            />
             <input
               value={lon}
-              onChange={e => setLon(e.target.value)}
-              placeholder="longitude" />
-            <button
-              type="button"
-              onClick={useDeviceLocation}>Use my device</button>
+              onChange={(e) => setLon(e.target.value)}
+              placeholder="longitude"
+              inputMode="decimal"
+              autoComplete="off"
+            />
+            <button type="button" className="btn btn--metal-dark" onClick={useDeviceLocation}>
+              Use my device
+            </button>
           </>
         )}
-        <button className="btn btn--metal" disabled={loading}>{loading ? "Loading…" : "Fetch"}
+
+        <button type="submit" className="btn btn--metal" disabled={loading}>
+          {loading ? 'Loading…' : 'Fetch'}
         </button>
       </form>
 
-      <pre>{JSON.stringify(data, null, 2)}</pre>
+      {/* results */}
+      {hasError && (
+        <div className="moon-result surface surface--metal-dark" role="status" aria-live="polite">
+          <div className="form-status">{data.error}</div>
+        </div>
+      )}
+
+      {data && !hasError && <MoonResult data={data} />}
     </section>
   );
 }

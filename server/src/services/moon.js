@@ -162,7 +162,7 @@ export async function getMoonFor(date, lat, lon, locationStr, ip) {
       phase: m.phase,
       moonrise: m.moonrise,
       moonset: m.moonset,
-      zodiacSign: first.zodiacSign ?? null, // DB may not store zodiac yet
+      zodiacSign: first.zodiacSign ?? null,
       location: {
         ...first.location,
         lat: Number(m.lat),

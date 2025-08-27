@@ -6,10 +6,9 @@
   color: var(--fg-muted);
 }
 
-
 .navbar {
   display: flex;
-  gap: 12px;
+  gap: var(--gap-3);
   max-width: 900px;
   margin: 0 auto;
   padding: 1rem;
@@ -23,15 +22,24 @@
 }
 
 .nav-link {
+  display: inline-block;
   padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
   text-decoration: none;
-  border-radius: 8px;
-  background: transparent;
-  color: inherit;
+  font-weight: 600;
+  color: var(--fg);
+  transition: background .2s ease, color .2s ease, transform .1s ease;
+}
+
+/* Default = text only, transparent background */
+.nav-link:hover {
+  background: var(--fg);
+  color: var(--bg);
 }
 
 .nav-link.active {
-  background: #e5e7eb;
+  background: var(--fg);
+  color: var(--bg);
 }
 
 .navbar-user {
@@ -39,6 +47,23 @@
   opacity: 0.8;
 }
 
+/* Login button: always brand */
+.nav-link.login-link {
+  background: var(--fg);
+  color: var(--bg);
+}
+.nav-link.login-link:hover {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+/* Logout button: inverse style */
 .logout-btn {
-  padding: 0.4rem 0.6rem;
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--fg);
+}
+.logout-btn:hover {
+  background: var(--fg);
+  color: var(--bg);
 }

@@ -7,24 +7,19 @@
     /* ~10% opacity line on dark */
     --border-subtle: #E6EBF41A;
     --danger: crimson;
-    --container: 900px;
-    --gap-1: 4px;
-    --gap-2: 8px;
-    --gap-3: 12px;
 
-    /* spacing & radii */
+    /* layout & rhythm */
+    --container: 900px;
     --gap-1: 4px;
     --gap-2: 8px;
     --gap-3: 12px;
     --radius-md: 8px;
-    --container: 900px;
 
-    /* buttons */
+    /* button sizing */
     --btn-py: 0.6rem;
     --btn-px: 0.9rem;
 
     /* “metal” palettes */
-    /* Light silver (“metal text” & light metal buttons) */
     --metal-a: #f2f5f8;
     --metal-b: #cbd1dc;
     --metal-c: #e9edf2;

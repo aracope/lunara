@@ -1,4 +1,107 @@
+.moon-switch {
+  display: flex;
+  gap: var(--gap-2);
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+/* “Chip” radios (uses :has which is widely supported now) */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5ch;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.chip input {
+  accent-color: var(--fg);
+  appearance: none;
+}
+
+.chip:has(input:checked) {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: transparent;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .25), inset 0 1px 0 rgba(255, 255, 255, .25);
+}
+
+.chip:has(input:focus-visible) {
+  outline: 2px solid var(--metal-b);
+  outline-offset: 2px;
+}
+
+/* Form layout */
 .moon-form {
   display: flex;
+  gap: var(--gap-2);
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.moon-form input {
+  min-width: clamp(220px, 30vw, 320px);
+}
+
+/* Result panel */
+.moon-result {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.moon-result pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9rem;
+}
+
+/* --- MoonResult block styles --- */
+.moon-result__header {
+  display: flex;
   gap: var(--gap-2, 8px);
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+/* circular “moon” badge (static crescent) */
+.moon-result__badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--fg);
+  position: relative;
+  box-shadow:
+    inset -6px -8px 12px rgba(0, 0, 0, .28),
+    inset 6px 8px 12px rgba(255, 255, 255, .18),
+    0 2px 10px rgba(0, 0, 0, .35);
+  flex: 0 0 auto;
+}
+
+.moon-result__badge::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--bg);
+  transform: translateX(32%);
+  box-shadow:
+    -6px 0 12px rgba(0, 0, 0, .45) inset,
+    6px 0 12px rgba(255, 255, 255, .12) inset;
+}
+
+/* key/value grid */
+.moon-kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+}
+
+.moon-kv dt {
+  opacity: 0.85;
 }

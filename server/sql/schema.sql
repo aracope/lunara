@@ -13,12 +13,12 @@ CREATE TABLE users (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Tarot cards (reference data; can be partially seeded or synced from Flask API later)
+-- Tarot cards (reference data)
 CREATE TABLE tarot_cards (
   id SERIAL PRIMARY KEY,
   name TEXT UNIQUE NOT NULL,
-  suit TEXT,                           -- e.g., Cups, Swords, Wands, Pentacles; NULL for Major Arcana
-  arcana TEXT NOT NULL,                -- 'Major' or 'Minor'
+  suit TEXT,                -- NULL for Major Arcana
+  arcana TEXT NOT NULL,     -- 'Major' or 'Minor'
   upright_meaning TEXT,
   reversed_meaning TEXT,
   image_url TEXT
@@ -28,16 +28,16 @@ CREATE TABLE tarot_cards (
 CREATE TABLE moon_data (
   id SERIAL PRIMARY KEY,
   for_date DATE NOT NULL,
-  lat NUMERIC(9,6) NOT NULL,
-  lon NUMERIC(9,6) NOT NULL,
-  phase TEXT,                          -- e.g. "Waxing Gibbous"
+  lat NUMERIC(9,6) NOT NULL CHECK (lat BETWEEN -90 AND 90),
+  lon NUMERIC(9,6) NOT NULL CHECK (lon BETWEEN -180 AND 180),
+  phase TEXT,
   moonrise TIMESTAMPTZ,
   moonset TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (for_date, lat, lon)
 );
 
--- Journal entries, scoped to user; optionally associated to tarot card and moon record
+-- Journal entries (per user). Keep moon_data_id for future caching.
 CREATE TABLE journal_entries (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -45,10 +45,25 @@ CREATE TABLE journal_entries (
   body TEXT NOT NULL,
   tarot_card_id INTEGER REFERENCES tarot_cards(id) ON DELETE SET NULL,
   moon_data_id INTEGER REFERENCES moon_data(id) ON DELETE SET NULL,
+  moon_ref JSONB,  -- { date_ymd, tz, lat?, lon?, location_label? }
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Helpful indexes
 CREATE INDEX idx_journal_user ON journal_entries(user_id);
+CREATE INDEX idx_journal_user_created ON journal_entries(user_id, created_at DESC);
 CREATE INDEX idx_moon_date ON moon_data(for_date);
+CREATE INDEX idx_journal_moon_ref_date
+  ON journal_entries (((moon_ref->>'date_ymd')::date));
+
+-- Auto-update updated_at
+CREATE OR REPLACE FUNCTION set_updated_at() RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END; $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_journal_entries_updated_at
+BEFORE UPDATE ON journal_entries
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();

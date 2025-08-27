@@ -1,13 +1,27 @@
-.auth-form {
-    display: grid;
-    gap: 8px;
-    max-width: 360px;
+input[type="text"],
+input[type="search"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+    background: transparent;
+    color: var(--fg);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md, 8px);
+    padding: 0.5rem 0.6rem;
 }
 
-.form-error {
-    color: var(--danger);
+input::placeholder,
+textarea::placeholder {
+    color: var(--fg-muted, #D8DDE6);
+    opacity: 0.7;
 }
 
-.form-status {
-    color: var(--danger);
+input:focus,
+textarea:focus,
+select:focus {
+    outline: 2px solid var(--metal-b);
+    outline-offset: 2px;
+    border-color: transparent;
 }
