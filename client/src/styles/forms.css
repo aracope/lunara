@@ -1,27 +1,52 @@
-input[type="text"],
-input[type="search"],
-input[type="number"],
-input[type="email"],
-input[type="password"],
-textarea,
-select {
-    background: transparent;
-    color: var(--fg);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md, 8px);
-    padding: 0.5rem 0.6rem;
-}
+ :root {
+     /* Form rhythm tokens (site-wide defaults) */
+     --field-py: 0.5rem;
+     /* vertical padding inside inputs */
+     --field-px: 0.6rem;
+     /* horizontal padding inside inputs */
+     --field-font-size: 1rem;
+     /* input text size */
+     --field-gap: var(--gap-2);
+     /* vertical gap between stacked fields */
+     --label-gap: 0.35rem;
+     /* space between label and input */
+     --field-min-tap: 44px;
+     /* a11y target size */
+ }
 
-input::placeholder,
-textarea::placeholder {
-    color: var(--fg-muted, #D8DDE6);
-    opacity: 0.7;
-}
 
-input:focus,
-textarea:focus,
-select:focus {
-    outline: 2px solid var(--metal-b);
-    outline-offset: 2px;
-    border-color: transparent;
-}
+ input[type="text"],
+ input[type="search"],
+ input[type="number"],
+ input[type="email"],
+ input[type="password"],
+ textarea,
+ select {
+     background: transparent;
+     color: var(--fg);
+     border: 1px solid var(--border-subtle);
+     border-radius: var(--radius-md, 8px);
+     padding: var(--field-py, 0.5rem) var(--field-px, 0.6rem);
+     font-size: var(--field-font-size, 1rem);
+     min-height: var(--field-min-tap, 44px);
+
+ }
+
+ label {
+     display: inline-block;
+     margin-bottom: var(--label-gap, 0.35rem);
+ }
+
+ input::placeholder,
+ textarea::placeholder {
+     color: var(--fg-muted, #D8DDE6);
+     opacity: 0.7;
+ }
+
+ input:focus,
+ textarea:focus,
+ select:focus {
+     outline: 2px solid var(--metal-b);
+     outline-offset: 2px;
+     border-color: transparent;
+ }

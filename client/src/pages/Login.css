@@ -1,0 +1,107 @@
+/* Full-height layout that centers the two-column block */
+.login {
+  min-height: 70dvh;
+  display: grid;
+  place-items: center;            /* centers the grid content */
+  padding: 2rem 1rem;             /* breathing room around the card on small screens */
+
+  /* Roomier fields just on Login */
+  --field-gap: var(--gap-3);
+  --field-py: 0.75rem;
+  --field-px: 0.9rem;
+  --label-gap: 0.45rem;
+}
+
+/* Two-column wrapper so the whole block itself is centered */
+.login__wrap {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;   /* brand | form */
+  gap: var(--gap-3);
+  align-items: stretch;
+  width: min(100%, 1000px);           /* don’t stretch too wide */
+}
+
+/* Collapse to one column on small screens */
+@media (max-width: 880px) {
+  .login__wrap { grid-template-columns: 1fr; }
+}
+
+/* Left visual panel (unchanged look, trimmed for brevity) */
+.login__brand {
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg,
+    var(--metal-dark-0) 0%, var(--metal-dark-1) 28%,
+    var(--metal-dark-2) 60%, var(--metal-dark-1) 85%,
+    var(--metal-dark-3) 100%);
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.14),
+    inset 0 -1px 0 rgba(0,0,0,.35),
+    0 10px 28px rgba(0,0,0,.35);
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  place-items: center;           /* centers the brand content */
+  padding: 2.4rem;
+}
+
+.login__brand-inner { text-align:center; max-width:34rem; }
+.login__title { font-size: clamp(2rem, 3vw + 1rem, 3rem); margin: 0 0 .75rem; }
+.login__subtitle { opacity:.9; line-height:1.4; }
+
+/* Right: form card (visually centered column; narrow for readability) */
+.login__card {
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, var(--metal-dark-0) 0%, var(--metal-dark-1) 100%);
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.14),
+    inset 0 -1px 0 rgba(0,0,0,.35),
+    0 10px 28px rgba(0,0,0,.35);
+  padding: 2.5rem 2.75rem;
+  display: grid;
+  align-content: center;
+}
+
+/* Form inner stack: make the actual fields centered and limited in width */
+.login__form {
+  width: 100%;
+  max-width: 420px;   
+  margin: 0 auto;       /* horizontally center the stack */
+  display: grid;
+  gap: var(--field-gap);
+}
+
+/* Field stack */
+.login__fields { display: grid; gap: var(--field-gap); }
+
+/* Checkbox row & actions */
+.login__row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--gap-2); margin: .5rem 0 1rem;
+}
+.login__actions { display: grid; gap: var(--gap-2); }
+
+/* Inputs full-width within the centered column */
+.login__fields input,
+.login__fields textarea,
+.login__fields select { width: 100%; }
+
+/* A tiny bit of margin on error text so it doesn’t hug fields */
+.form-error { margin-top: 0.35rem; }
+
+/* Links */
+.login a { color: var(--fg); text-underline-offset: 2px; }
+.login a:hover { opacity: .95; }
+
+/* Mobile: stretch button for easy tap */
+@media (max-width: 480px) {
+  .login__actions .btn { width: 100%; text-align: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .login__brand::before {
+        transition: none;
+        transform: none;
+    }
+}
