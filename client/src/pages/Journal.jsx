@@ -54,7 +54,7 @@ export default function Journal() {
         {entries.map(e => (
           <li key={e.id} className="journal-item">
             <div><strong>{e.title}</strong> — {e.body}</div>
-            {e.moon_ref && <JournalMoon refData={e.moon_ref} />}
+            {e.moon_data_id && <JournalMoon refData={e.moon_data_id} />}
           </li>
         ))}
       </ul>

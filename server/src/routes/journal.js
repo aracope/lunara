@@ -46,7 +46,7 @@ const updateSchema = z
 router.get("/", requireAuth, async (req, res, next) => {
   try {
     const { rows } = await pool.query(
-      `SELECT id, user_id, title, body, tarot_card_id, moon_data_id, moon_ref, created_at, updated_at
+      `SELECT id, user_id, title, body, tarot_card_id, moon_data_id, moon_data_id, created_at, updated_at
        FROM journal_entries
        WHERE user_id = $1
        ORDER BY created_at DESC`,
@@ -82,9 +82,9 @@ router.post("/", requireAuth, async (req, res, next) => {
     }
 
     const { rows } = await pool.query(
-      `INSERT INTO journal_entries (user_id, title, body, tarot_card_id, moon_data_id, moon_ref)
+      `INSERT INTO journal_entries (user_id, title, body, tarot_card_id, moon_data_id, moon_data_id)
        VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, user_id, title, body, tarot_card_id, moon_data_id, moon_ref, created_at, updated_at`,
+       RETURNING id, user_id, title, body, tarot_card_id, moon_data_id, moon_data_id, created_at, updated_at`,
       [
         req.user.id,
         payload.title.trim(),
@@ -137,7 +137,7 @@ router.patch("/:id", requireAuth, async (req, res, next) => {
       values.push(payload.moon_data_id ?? null);
     }
     if (payload.moonRef !== undefined) {
-      fields.push(`moon_ref = $${idx++}`);
+      fields.push(`moon_data_id = $${idx++}`);
       values.push(payload.moonRef ? JSON.stringify(payload.moonRef) : null);
     }
 
@@ -148,7 +148,7 @@ router.patch("/:id", requireAuth, async (req, res, next) => {
       `UPDATE journal_entries
          SET ${fields.join(", ")}
        WHERE id = $${idx} AND user_id = $${idx + 1}
-       RETURNING id, user_id, title, body, tarot_card_id, moon_data_id, moon_ref, created_at, updated_at`,
+       RETURNING id, user_id, title, body, tarot_card_id, moon_data_id, moon_data_id, created_at, updated_at`,
       [...values, id, req.user.id]
     );
 

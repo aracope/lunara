@@ -76,7 +76,7 @@ CREATE TABLE journal (
   body TEXT NOT NULL,
   tarot_card_id INTEGER REFERENCES tarot_cards(id) ON DELETE SET NULL,
   moon_data_id INTEGER REFERENCES moon_data(id) ON DELETE SET NULL,
-  moon_ref JSONB,  -- { date_ymd, tz, lat?, lon?, location_label? }
+  moon_snapshot JSONB,  -- { date_ymd, tz, lat?, lon?, location_label? }
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   -- Post-MVP (social/community/sharing):
@@ -90,9 +90,9 @@ CREATE INDEX idx_journal_user ON journal(user_id);
 CREATE INDEX idx_journal_user_created ON journal(user_id, created_at DESC);
 CREATE INDEX idx_moon_date ON moon_data(for_date);
 
--- quick lookup by embedded moon_ref date
-CREATE INDEX idx_journal_moon_ref_date
-  ON journal (((moon_ref->>'date_ymd')::date));
+-- quick lookup by embedded moon_snapshot date
+CREATE INDEX idx_journal_moon_snapshot_date
+  ON journal (((moon_snapshot->>'date_ymd')::date));
 
 -- =========
 -- Triggers

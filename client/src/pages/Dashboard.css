@@ -1,0 +1,163 @@
+.dash {
+    max-width: var(--container);
+    margin: 2rem auto;
+    padding: 0 1rem;
+    display: grid;
+    gap: var(--gap-3, 12px);
+}
+
+.dash-header {
+    text-align: center;
+    display: grid;
+    gap: var(--gap-2, 8px);
+}
+
+.dash-title {
+    font-size: clamp(1.75rem, 4vw, 2.25rem);
+    letter-spacing: 0.01em;
+}
+
+.dash-subtitle {
+    opacity: 0.9;
+}
+
+.dash-loading {
+    text-align: center;
+    opacity: 0.8;
+}
+
+/* Grid of cards */
+.dash-grid {
+    display: grid;
+    gap: var(--gap-3, 12px);
+    grid-template-columns: 1fr;
+    /* mobile */
+}
+
+@media (min-width: 640px) {
+    .dash-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 960px) {
+    .dash-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.dash-card {
+    border-radius: var(--radius-md);
+    background: linear-gradient(180deg, var(--metal-dark-0) 0%, var(--metal-dark-1) 100%);
+    border: 1px solid rgba(255, 255, 255, .12);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .14),
+        inset 0 -1px 0 rgba(0, 0, 0, .35),
+        0 10px 28px rgba(0, 0, 0, .35);
+    padding: 2.5rem 2.75rem;
+    display: grid;
+    align-content: center;
+}
+
+.dash-card__title {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.1rem;
+}
+
+/* Key/Value pairs */
+.dash-kv {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    /* label hugs content; value fills */
+    align-items: baseline;
+    gap: 6px 12px;
+}
+
+.dash-kv dt {
+    opacity: 0.85;
+}
+
+/* Stacked key/value layout (label above value) */
+.dash-kv--stack {
+    display: grid;
+    /* rows of pairs */
+    grid-template-columns: 1fr;
+    gap: 12px;
+    /* space between pairs */
+}
+
+.dash-kv--stack>div {
+    display: grid;
+    /* stack label + value inside each pair */
+    grid-template-columns: 1fr;
+    gap: 4px;
+}
+
+.dash-kv--stack dt {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+.dash-kv--stack dd {
+    margin: 0;
+    min-width: 0;
+    /* allow wrapping */
+    line-height: 1.35;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    /* long emails/urls wrap nicely */
+    hyphens: auto;
+    font-weight: 500;
+}
+
+/* Keep cards from visually spilling */
+.dash-card {
+    overflow: hidden;
+}
+
+
+/* Buttons / links */
+.dash-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gap-2, 8px);
+    margin-top: 0.25rem;
+}
+
+.dash-link {
+    color: var(--fg);
+    text-decoration: none;
+}
+
+.dash-link:hover {
+    text-decoration: underline;
+}
+
+.dash-muted {
+    opacity: 0.75;
+}
+
+/* Recent list */
+.dash-list {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--gap-2, 8px);
+    margin: 0.25rem 0;
+}
+
+.dash-list__item {
+    display: grid;
+    gap: 2px;
+}
+
+.dash-snippet {
+    opacity: 0.9;
+    line-height: 1.35;
+    margin: 0;
+}
+
+.dash-empty {
+    opacity: 0.85;
+    margin: 0.25rem 0 0.5rem;
+}
