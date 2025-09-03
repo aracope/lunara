@@ -1,12 +1,12 @@
 import { Router } from "express";
 import { z } from "zod";
-import { pool } from "../db.js";
+import { pool } from "../../src/db.js";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 
 /** Schemas */
-const moonRefSchema = z
+const moonSnapshotSchema = z
   .object({
     date_ymd: z.string().regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/),
     tz: z.string().min(1),
@@ -27,7 +27,8 @@ const createSchema = z.object({
   body: z.string().min(1),
   moon_data_id: z.number().int().positive().optional(),
   tarot_card_id: z.number().int().positive().optional(),
-  moonRef: moonRefSchema.optional(),
+  // API accepts camelCase, DB stores as moon_snapshot
+  moonSnapshot: moonSnapshotSchema.optional(),
 });
 
 const updateSchema = z
@@ -36,7 +37,7 @@ const updateSchema = z
     body: z.string().min(1).optional(),
     moon_data_id: z.number().int().positive().nullable().optional(),
     tarot_card_id: z.number().int().positive().nullable().optional(),
-    moonRef: moonRefSchema.nullable().optional(),
+    moonSnapshot: moonSnapshotSchema.nullable().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: "No fields to update",
@@ -46,10 +47,11 @@ const updateSchema = z
 router.get("/", requireAuth, async (req, res, next) => {
   try {
     const { rows } = await pool.query(
-      `SELECT id, user_id, title, body, tarot_card_id, moon_data_id, moon_data_id, created_at, updated_at
-       FROM journal_entries
-       WHERE user_id = $1
-       ORDER BY created_at DESC`,
+      `SELECT id, user_id, title, body, tarot_card_id, moon_data_id, moon_snapshot,
+              created_at, updated_at
+         FROM journal
+        WHERE user_id = $1
+        ORDER BY created_at DESC`,
       [req.user.id]
     );
     res.json({ entries: rows });
@@ -63,8 +65,8 @@ router.post("/", requireAuth, async (req, res, next) => {
   try {
     const payload = createSchema.parse(req.body);
 
-    // If foreign keys are provided, ensure they exist (optional but clearer errors)
-    if (payload.moon_data_id) {
+    // Optional FK checks → friendly errors
+    if (payload.moon_data_id != null) {
       const { rowCount } = await pool.query(
         "SELECT 1 FROM moon_data WHERE id = $1",
         [payload.moon_data_id]
@@ -72,7 +74,7 @@ router.post("/", requireAuth, async (req, res, next) => {
       if (!rowCount)
         return res.status(400).json({ error: "Invalid moon_data_id" });
     }
-    if (payload.tarot_card_id) {
+    if (payload.tarot_card_id != null) {
       const { rowCount } = await pool.query(
         "SELECT 1 FROM tarot_cards WHERE id = $1",
         [payload.tarot_card_id]
@@ -82,16 +84,18 @@ router.post("/", requireAuth, async (req, res, next) => {
     }
 
     const { rows } = await pool.query(
-      `INSERT INTO journal_entries (user_id, title, body, tarot_card_id, moon_data_id, moon_data_id)
+      `INSERT INTO journal
+         (user_id, title, body, tarot_card_id, moon_data_id, moon_snapshot)
        VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, user_id, title, body, tarot_card_id, moon_data_id, moon_data_id, created_at, updated_at`,
+       RETURNING id, user_id, title, body, tarot_card_id, moon_data_id, moon_snapshot,
+                 created_at, updated_at`,
       [
         req.user.id,
         payload.title.trim(),
         payload.body,
-        payload.tarot_card_id || null,
-        payload.moon_data_id || null,
-        payload.moonRef ? JSON.stringify(payload.moonRef) : null,
+        payload.tarot_card_id ?? null,
+        payload.moon_data_id ?? null,
+        payload.moonSnapshot ? JSON.stringify(payload.moonSnapshot) : null,
       ]
     );
 
@@ -136,19 +140,19 @@ router.patch("/:id", requireAuth, async (req, res, next) => {
       fields.push(`moon_data_id = $${idx++}`);
       values.push(payload.moon_data_id ?? null);
     }
-    if (payload.moonRef !== undefined) {
-      fields.push(`moon_data_id = $${idx++}`);
-      values.push(payload.moonRef ? JSON.stringify(payload.moonRef) : null);
+    if (payload.moonSnapshot !== undefined) {
+      fields.push(`moon_snapshot = $${idx++}`);
+      values.push(payload.moonSnapshot ? JSON.stringify(payload.moonSnapshot) : null);
     }
 
     fields.push(`updated_at = NOW()`);
 
-    // Ownership check in WHERE clause
     const { rows } = await pool.query(
-      `UPDATE journal_entries
-         SET ${fields.join(", ")}
-       WHERE id = $${idx} AND user_id = $${idx + 1}
-       RETURNING id, user_id, title, body, tarot_card_id, moon_data_id, moon_data_id, created_at, updated_at`,
+      `UPDATE journal
+          SET ${fields.join(", ")}
+        WHERE id = $${idx} AND user_id = $${idx + 1}
+        RETURNING id, user_id, title, body, tarot_card_id, moon_data_id, moon_snapshot,
+                  created_at, updated_at`,
       [...values, id, req.user.id]
     );
 
@@ -161,7 +165,6 @@ router.patch("/:id", requireAuth, async (req, res, next) => {
         .status(400)
         .json({ error: "Invalid payload", details: err.errors });
     }
-    // FK violations surface as code '23503'
     if (err.code === "23503") {
       return res
         .status(400)
@@ -179,7 +182,7 @@ router.delete("/:id", requireAuth, async (req, res, next) => {
       return res.status(400).json({ error: "Invalid id" });
 
     const { rowCount } = await pool.query(
-      `DELETE FROM journal_entries
+      `DELETE FROM journal
         WHERE id = $1 AND user_id = $2`,
       [id, req.user.id]
     );

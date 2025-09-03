@@ -83,4 +83,5 @@ export const api = {
   tarotYesNo: (question) =>
     request("/tarot/yesno", { method: "POST", body: { question } }),
   tarotCard: (id) => request(`/tarot/cards/${id}`),
+  tarotList: () => request("/tarot/cards"),
 };

@@ -1,9 +1,132 @@
+.tarot {
+  max-width: var(--container);
+  margin: 2rem auto;
+  padding: 0 1rem;
+  display: grid;
+  gap: var(--gap-3, 12px);
+}
+
+.tarot-hero {
+  text-align: center;
+  display: grid;
+  gap: var(--gap-2, 8px);
+}
+.tarot-subtitle { opacity: 0.9; }
+
+/* Actions row */
 .tarot-actions {
   display: flex;
   gap: var(--gap-3, 12px);
   flex-wrap: wrap;
+  align-items: center;
 }
 
+.tarot-yesno,
+.tarot-byid {
+  display: flex;
+  gap: var(--gap-2, 8px);
+  align-items: center;
+}
+
+.tarot-yesno input {
+  width: clamp(220px, 40vw, 420px);
+}
 .tarot-qid-input {
   width: 80px;
+}
+
+/* Results grid */
+.tarot-grid {
+  display: grid;
+  gap: var(--gap-3, 12px);
+  grid-template-columns: 1fr; /* mobile */
+}
+@media (min-width: 960px) {
+  .tarot-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* Panels */
+.tarot-panel {
+  display: grid;
+  gap: var(--gap-2, 8px);
+  padding: 1rem;
+  border-radius: 12px;
+}
+.tarot-panel__title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.tarot-panel__subtitle {
+  margin: 0.5rem 0 0.25rem;
+  font-size: 1rem;
+  opacity: .95;
+}
+
+/* Card view */
+.tarot-card {
+  display: grid;
+  gap: var(--gap-2, 8px);
+}
+.tarot-card__header {
+  display: flex;
+  gap: var(--gap-2, 8px);
+  align-items: baseline;
+}
+.tarot-card__title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.tarot-card__meta {
+  margin-left: auto;
+  opacity: 0.85;
+  font-size: 0.95rem;
+}
+
+.tarot-card__media img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: block;
+  object-fit: cover;
+  /* If you want tighter consistency: */
+  /* aspect-ratio: 3 / 4; */
+}
+
+/* Key/value meanings */
+.tarot-kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+}
+.tarot-kv dt { opacity: 0.85; }
+.tarot-kv dd { margin: 0; }
+
+/* Yes/No display */
+.tarot-yn-row {
+  display: flex;
+  gap: var(--gap-2, 8px);
+  align-items: center;
+}
+.tarot-muted { opacity: 0.8; }
+
+.tarot-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: 1px solid var(--border-subtle, #ffffff22);
+}
+.tarot-badge--yes {
+  background: linear-gradient(90deg, var(--metal-a), var(--metal-b), var(--metal-a));
+  color: var(--bg);
+}
+.tarot-badge--no {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: transparent;
+}
+.tarot-badge--maybe {
+  color: var(--fg);
+  background: transparent;
 }

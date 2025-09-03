@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
+import { pool } from "../db.js";
 import { getCardOfDay, drawYesNo, getCardById } from "../services/tarot.js";
 
 const router = Router();
@@ -42,15 +43,35 @@ router.get("/yesno", async (_req, res, next) => {
 });
 
 // GET /tarot/cards/:id
-router.get("/cards/:id", async (req, res, next) => {
+router.get('/cards/:id', async (req, res, next) => {
   try {
     const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ error: 'Invalid id' });
+    }
     const data = await getCardById(id);
+    if (!data) return res.status(404).json({ error: 'Not found' });
     res.json(data);
   } catch (err) {
-    if (err.status === 400)
-      return res.status(400).json({ error: "Invalid id" });
-    if (err.status === 404) return res.status(404).json({ error: "Not found" });
+    if (err.status === 400) return res.status(400).json({ error: 'Invalid id' });
+    if (err.status === 404) return res.status(404).json({ error: 'Not found' });
+    next(err);
+  }
+});
+
+// GET /tarot/cards  -> [{ id, name, arcana, suit }]
+router.get("/cards", async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, name, arcana, suit
+         FROM tarot_cards
+         ORDER BY
+           CASE WHEN arcana='Major' THEN 0 ELSE 1 END,
+           suit NULLS FIRST,
+           id`
+    );
+    res.json({ cards: rows });
+  } catch (err) {
     next(err);
   }
 });
