@@ -28,7 +28,9 @@ describe("Journal routes (auth required)", () => {
   });
 
   test("PATCH /journal/:id updates an entry", async () => {
-    const { body: { entry } } = await agent
+    const {
+      body: { entry },
+    } = await agent
       .post("/journal")
       .send({ title: "T", body: "B" })
       .expect(201);
@@ -42,7 +44,9 @@ describe("Journal routes (auth required)", () => {
   });
 
   test("DELETE /journal/:id removes an entry", async () => {
-    const { body: { entry } } = await agent
+    const {
+      body: { entry },
+    } = await agent
       .post("/journal")
       .send({ title: "T", body: "B" })
       .expect(201);
