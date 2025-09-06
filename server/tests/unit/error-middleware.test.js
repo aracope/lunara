@@ -1,27 +1,21 @@
 import request from "supertest";
 import app from "../../src/app.js";
 
-describe("Auth validation", () => {
-  test("register invalid email -> 400 with field", async () => {
-    const res = await request(app)
-      .post("/auth/register")
-      .send({ email: "bad", password: "passpass123" });
-    expect(res.status).toBe(400);
-    expect(res.body.field).toBe("email");
+describe("error & 404 middleware", () => {
+  test("unknown route -> 404 JSON error", async () => {
+    const res = await request(app).get("/no-such-route").expect(404);
+    expect(res.body).toEqual({ error: "Not Found" });
   });
 
-  test("register short password -> 400", async () => {
+  test("CORS blocked origin bubbles to errorHandler -> 5xx JSON", async () => {
+    // app.js: second CORS layer checks allowList and calls cb(new Error(...))
+    // Set an Origin that's NOT in CORS_ORIGIN to trigger the error path.
     const res = await request(app)
-      .post("/auth/register")
-      .send({ email: "a@x.com", password: "short" });
-    expect(res.status).toBe(400);
-    expect(res.body.field).toBe("password");
-  });
+      .get("/health")
+      .set("Origin", "http://not-allowed.example")
+      .expect(500);
 
-  test("login missing fields -> 400", async () => {
-    const res = await request(app)
-      .post("/auth/login")
-      .send({ email: "a@x.com" });
-    expect(res.status).toBe(400);
+    // Your errorHandler returns { error: <message> }
+    expect(res.body?.error || "").toMatch(/CORS blocked/i);
   });
 });

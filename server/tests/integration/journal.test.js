@@ -5,7 +5,10 @@ describe("Journal routes (auth required)", () => {
   let agent;
 
   beforeEach(async () => {
+    // Use a persistent SuperTest agent so cookies (JWT) are kept between calls.
     agent = request.agent(app);
+
+    // Register a fresh user per test; this sets the httpOnly auth cookie.
     await agent
       .post("/auth/register")
       .send({ email: "j@x.com", password: "passpass123" })

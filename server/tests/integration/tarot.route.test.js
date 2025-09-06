@@ -4,14 +4,20 @@ import app from "../../src/app.js";
 import { jest } from "@jest/globals";
 import { TAROT_API_BASE } from "../../src/config.js";
 
+// Use env override if present (e.g., CI), else the app's configured base.
+const base = process.env.TAROT_API_BASE || TAROT_API_BASE;
+
 // Silence console.error noise from expected 5xx paths
 let errorSpy;
+
 beforeAll(() => {
+  // Block real outbound HTTP; allow localhost for supertest
   nock.disableNetConnect();
   nock.enableNetConnect(/(127\.0\.0\.1|localhost)/);
   errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
 });
 afterEach(() => nock.cleanAll());
+
 afterAll(() => {
   nock.enableNetConnect();
   errorSpy?.mockRestore();
@@ -22,6 +28,7 @@ describe("Tarot routes", () => {
     nock(TAROT_API_BASE)
       .get(/\/daily/)
       .reply(200, { card: { id: 17, name: "The Tower" } });
+
     const res = await request(app).get("/tarot/daily").expect(200);
     expect(res.body.card).toBeDefined();
   });
@@ -71,5 +78,24 @@ describe("Tarot routes", () => {
       .reply(404, { error: "Not found" });
     const res = await request(app).get("/tarot/cards/999999").expect(404);
     expect(res.body.error).toMatch(/not/i);
+  });
+
+  test("GET /tarot/daily forwards seed and date to upstream", async () => {
+    // Capture the exact path/query the app calls:
+    const scope = nock(base)
+      .get(
+        (uri) =>
+          uri.startsWith("/daily") &&
+          uri.includes("seed=user123") &&
+          uri.includes("date=2025-08-23")
+      )
+      .reply(200, { card: { id: 1, name: "Ace" }, date: "2025-08-23" });
+
+    const res = await request(app)
+      .get("/tarot/daily?seed=user123&date=2025-08-23")
+      .expect(200);
+
+    expect(res.body.card).toBeDefined();
+    expect(scope.isDone()).toBe(true); // ensured query params were present
   });
 });

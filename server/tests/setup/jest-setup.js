@@ -1,8 +1,22 @@
 import { pool } from "../../src/db.js";
 
-// global test helpers
+/**
+ * Global Jest setup for server-side integration tests.
+ *
+ * Responsibilities:
+ *   - resetDb(): truncate all tables between tests
+ *   - beforeEach: ensure tests start with a clean DB
+ *   - afterAll: gracefully close PG pool
+ *
+ * Truncates are wrapped in conditional checks so they only run if
+ * tables exist (helpful for partial migrations or schema evolution).
+ *
+ * CASCADE ensures dependent rows (FKs) are also removed.
+ * RESTART IDENTITY resets SERIAL/identity counters to 1.
+ */
+
+// global test helper: truncate all known tables
 export async function resetDb() {
-  // truncate in dependency order or use CASCADE
   await pool.query(`
      DO $$
     BEGIN
@@ -22,10 +36,12 @@ export async function resetDb() {
   `);
 }
 
+// Clean DB before each test case
 beforeEach(async () => {
   await resetDb();
 });
 
+// Ensure PG pool is closed after the whole test suite
 afterAll(async () => {
   await pool.end();
 });

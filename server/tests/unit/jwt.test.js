@@ -2,17 +2,14 @@ import { signJwt, verifyJwt } from "../../src/utils/jwt.js";
 
 describe("jwt utils", () => {
   test("sign & verify roundtrip", () => {
-    const token = signJwt({ sub: 123 }, { expiresIn: "1h" });
+    // no options; util uses 7d internally
+    const token = signJwt({ sub: 123 });
     const payload = verifyJwt(token);
-    expect(payload.sub ?? payload.userId).toBe(123);
+    expect(payload && payload.sub).toBe(123);
   });
 
-  test("verify returns null (or throws) on invalid token", () => {
-    try {
-      const res = verifyJwt("garbage.token.here");
-      expect(res == null).toBe(true);
-    } catch (e) {
-      expect(e).toBeTruthy();
-    }
+  test("verify returns null on invalid token", () => {
+    const res = verifyJwt("garbage.token.here");
+    expect(res).toBeNull();
   });
 });

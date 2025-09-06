@@ -3,6 +3,7 @@ import app from "../../src/app.js";
 
 describe("Auth routes", () => {
   test("POST /auth/register creates a user and sets httpOnly cookie", async () => {
+    // Happy path: user gets created and cookie is set
     const res = await request(app)
       .post("/auth/register")
       .send({
@@ -12,9 +13,12 @@ describe("Auth routes", () => {
       })
       .expect(201);
 
+    // Response includes user object with expected fields
     expect(res.body).toMatchObject({
       user: { email: "alice@example.com", display_name: "Alice" },
     });
+
+    // Cookie header should contain JWT "token" and HttpOnly flag
     const setCookie = res.headers["set-cookie"]?.join(";") ?? "";
     expect(setCookie).toMatch(/token=/);
     expect(setCookie).toMatch(/HttpOnly/i);
@@ -24,9 +28,12 @@ describe("Auth routes", () => {
     await request(app)
       .post("/auth/register")
       .send({ email: "dup@x.com", password: "passpass123" });
+
+    // Second attempt with same email should fail gracefully
     const res = await request(app)
       .post("/auth/register")
       .send({ email: "dup@x.com", password: "passpass123" });
+
     expect(res.status).toBe(409);
     expect(res.body.error).toMatch(/already registered/i);
   });
@@ -35,31 +42,40 @@ describe("Auth routes", () => {
     await request(app)
       .post("/auth/register")
       .send({ email: "bob@example.com", password: "passpass123" });
+
     const res = await request(app)
       .post("/auth/login")
       .send({ email: "bob@example.com", password: "passpass123" });
+
     expect(res.status).toBe(200);
     const setCookie = res.headers["set-cookie"]?.join(";") ?? "";
     expect(setCookie).toMatch(/token=/);
   });
 
   test("POST /auth/login returns 401 for bad creds", async () => {
+    // Nonexistent email should fail
     const res = await request(app)
       .post("/auth/login")
       .send({ email: "nope@x.com", password: "wrongpass" });
+
     expect(res.status).toBe(401);
   });
 
   test("GET /auth/me returns null when no cookie", async () => {
+    // Without auth cookie, "me" endpoint returns { user: null }
     const res = await request(app).get("/auth/me").expect(200);
     expect(res.body).toEqual({ user: null });
   });
 
   test("GET /auth/me returns user when authenticated", async () => {
     const agent = request.agent(app);
+
+    // Register sets cookie automatically
     await agent
       .post("/auth/register")
       .send({ email: "me@x.com", password: "passpass123" });
+
+    // Same agent should now have cookie and resolve user
     const res = await agent.get("/auth/me").expect(200);
     expect(res.body.user).toMatchObject({ email: "me@x.com" });
   });
@@ -69,7 +85,11 @@ describe("Auth routes", () => {
     await agent
       .post("/auth/register")
       .send({ email: "out@x.com", password: "passpass123" });
+
     const res = await agent.post("/auth/logout").expect(200);
     expect(res.body).toEqual({ ok: true });
+    // Optional: check that cookie header clears the token
+    const setCookie = res.headers["set-cookie"]?.join(";") ?? "";
+    expect(setCookie).toMatch(/token=;/);
   });
 });
