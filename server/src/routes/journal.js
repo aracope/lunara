@@ -5,7 +5,13 @@ import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 
-/** Schemas */
+/** Schemas
+ * moonSnapshot: optional denormalized moon info stored alongside an entry.
+ * - date_ymd: "YYYY-MM-DD" (UTC)
+ * - tz: IANA timezone string (e.g., "America/Boise")
+ * - lat/lon: both required together if present
+ * - location_label: friendly label, max 120 chars (e.g., "Boise, ID")
+ */
 const moonSnapshotSchema = z
   .object({
     date_ymd: z.string().regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/),
@@ -22,6 +28,12 @@ const moonSnapshotSchema = z
     }
   );
 
+/**
+ * Create payload
+ *  - title, body: required
+ *  - moon_data_id, tarot_card_id: optional foreign keys
+ *  - moonSnapshot: optional denormalized JSON (camelCase in API, stored as moon_snapshot)
+ */
 const createSchema = z.object({
   title: z.string().min(1).max(200),
   body: z.string().min(1),
@@ -31,6 +43,12 @@ const createSchema = z.object({
   moonSnapshot: moonSnapshotSchema.optional(),
 });
 
+/**
+ * Update payload (PATCH)
+ *  - Any field optional; at least one must be present
+ *  - *_id fields accept null to clear FK
+ *  - moonSnapshot accepts null to clear snapshot
+ */
 const updateSchema = z
   .object({
     title: z.string().min(1).max(200).optional(),
@@ -43,7 +61,17 @@ const updateSchema = z
     message: "No fields to update",
   });
 
-/** GET /journal — list current user’s entries (newest first) */
+/**
+ * GET /journal
+ * Auth: required
+ * Returns the current user's entries, newest first.
+ *
+ * Response: { entries: JournalEntry[] }
+ * JournalEntry: {
+ *   id, user_id, title, body, tarot_card_id, moon_data_id, moon_snapshot,
+ *   created_at, updated_at
+ * }
+ */
 router.get("/", requireAuth, async (req, res, next) => {
   try {
     const { rows } = await pool.query(
@@ -60,12 +88,28 @@ router.get("/", requireAuth, async (req, res, next) => {
   }
 });
 
-/** POST /journal — create new entry for current user */
+/**
+ * POST /journal
+ * Auth: required
+ * Create a new journal entry for the current user.
+ *
+ * Steps:
+ *  - Validate body with zod
+ *  - If FK fields provided, verify they exist (friendly 400 on invalid)
+ *  - Insert entry; store moonSnapshot (if provided) as JSONB column moon_snapshot
+ *
+ * Request:
+ *  { title, body, moon_data_id?, tarot_card_id?, moonSnapshot? }
+ *
+ * Responses:
+ *  - 201 { entry }
+ *  - 400 { error } on bad payload or invalid FK
+ */
 router.post("/", requireAuth, async (req, res, next) => {
   try {
     const payload = createSchema.parse(req.body);
 
-    // Optional FK checks → friendly errors
+    // Optional FK checks -> friendly errors
     if (payload.moon_data_id != null) {
       const { rowCount } = await pool.query(
         "SELECT 1 FROM moon_data WHERE id = $1",
@@ -110,7 +154,21 @@ router.post("/", requireAuth, async (req, res, next) => {
   }
 });
 
-/** PATCH /journal/:id — update only your entry */
+/** PATCH /journal/:id  * Auth: required
+ * Update fields on a single entry owned by the current user.
+ *
+ * - Validates :id (positive integer)
+ * - Dynamically builds a parameterized UPDATE
+ * - Sets updated_at = NOW()
+ *
+ * Request: any subset of { title, body, moon_data_id, tarot_card_id, moonSnapshot }
+ *   - To clear FKs/snapshot, send null for that field
+ *
+ * Responses:
+ *  - 200 { entry }
+ *  - 400 { error } on bad input/FKs
+ *  - 404 { error: "Entry not found" } if not owned or missing
+ */
 router.patch("/:id", requireAuth, async (req, res, next) => {
   try {
     const id = Number(req.params.id);
@@ -142,7 +200,9 @@ router.patch("/:id", requireAuth, async (req, res, next) => {
     }
     if (payload.moonSnapshot !== undefined) {
       fields.push(`moon_snapshot = $${idx++}`);
-      values.push(payload.moonSnapshot ? JSON.stringify(payload.moonSnapshot) : null);
+      values.push(
+        payload.moonSnapshot ? JSON.stringify(payload.moonSnapshot) : null
+      );
     }
 
     fields.push(`updated_at = NOW()`);
@@ -174,7 +234,15 @@ router.patch("/:id", requireAuth, async (req, res, next) => {
   }
 });
 
-/** DELETE /journal/:id — delete only your entry */
+/** DELETE /journal/:id
+ * Auth: required
+ * Delete a single entry owned by the current user.
+ *
+ * Responses:
+ *  - 200 { ok: true }
+ *  - 400 { error } invalid id
+ *  - 404 { error } not found or not owned by user
+ */
 router.delete("/:id", requireAuth, async (req, res, next) => {
   try {
     const id = Number(req.params.id);

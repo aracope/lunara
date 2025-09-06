@@ -6,6 +6,12 @@ import { verifyJwt, signJwt } from "../utils/jwt.js";
 
 const router = Router();
 
+/**
+ * Validation schemas (zod)
+ * - registerSchema: email, password, optional displayName
+ * - loginSchema: email + password
+ * Rejects unknown keys for safety.
+ */
 const registerSchema = z
   .object({
     email: z.string().trim().email("Please enter a valid email address."),
@@ -13,7 +19,6 @@ const registerSchema = z
       .string()
       .trim()
       .min(8, "Password must be at least 8 characters."),
-    // Optional: allow omitted or empty-after-trim to become undefined
     displayName: z
       .string()
       .transform((v) => (typeof v === "string" ? v.trim() : v))
@@ -22,7 +27,7 @@ const registerSchema = z
       })
       .optional(),
   })
-  .strict(); // reject unknown keys with a clear message
+  .strict();
 
 const loginSchema = z
   .object({
@@ -34,6 +39,14 @@ const loginSchema = z
   })
   .strict();
 
+/**
+ * Helper: cookieOpts
+ *
+ * Standardizes cookie options for the auth token.
+ * - httpOnly: not accessible from JS
+ * - sameSite: lax (works with most cross-site logins)
+ * - secure: only true in production (HTTPS)
+ */
 function cookieOpts() {
   const isProd = process.env.NODE_ENV === "production";
   return {
@@ -43,11 +56,26 @@ function cookieOpts() {
   };
 }
 
+/**
+ * POST /auth/register
+ *
+ * Register a new user.
+ * Steps:
+ *  - Validate input with zod
+ *  - Check if email already exists
+ *  - Hash password with bcrypt
+ *  - Insert user into DB
+ *  - Issue JWT in httpOnly cookie
+ *
+ * Responses:
+ *  - 201 { user }
+ *  - 400 { error, field } on bad input
+ *  - 409 { error, field } if email already registered
+ */
 router.post("/register", async (req, res, next) => {
   try {
     const parsed = registerSchema.safeParse(req.body);
     if (!parsed.success) {
-      // Send the first field error (or swap to return all)
       const issue = parsed.error.issues[0];
       return res.status(400).json({
         error: issue?.message || "Invalid input.",
@@ -56,7 +84,7 @@ router.post("/register", async (req, res, next) => {
     }
     const { email, password, displayName } = parsed.data;
 
-    // pre-check to give a friendlier message than a raw 23505
+    // Pre-check for existing email (friendlier than raw DB error)
     const { rows: existing } = await pool.query(
       "SELECT id FROM users WHERE email = $1",
       [email.toLowerCase()]
@@ -67,6 +95,7 @@ router.post("/register", async (req, res, next) => {
         .json({ error: "That email is already registered.", field: "email" });
     }
 
+    // Hash password
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
@@ -86,25 +115,38 @@ router.post("/register", async (req, res, next) => {
       // Map unique-violation to a clear 409 even if the functional index fires
       if (
         err?.code === "23505" &&
-        (
-          err?.constraint === "users_email_lower_unique" || // functional unique index
-          err?.constraint === "users_email_key" || // plain UNIQUE on column
-          (typeof err?.detail === "string" && err.detail.includes("(lower(email))"))
-        )
+        (err?.constraint === "users_email_lower_unique" || 
+          err?.constraint === "users_email_key" || 
+          (typeof err?.detail === "string" &&
+            err.detail.includes("(lower(email))")))
       ) {
         return res.status(409).json({
           error: "That email is already registered.",
           field: "email",
         });
       }
-      throw err; // let the general catch handle anything else
+      throw err;
     }
   } catch (err) {
-    // Any other error falls through to your error handler
     return next(err);
   }
 });
 
+/**
+ * POST /auth/login
+ *
+ * Log in an existing user.
+ * Steps:
+ *  - Validate input with zod
+ *  - Fetch user by email
+ *  - Compare password with bcrypt
+ *  - Issue JWT in httpOnly cookie
+ *
+ * Responses:
+ *  - 200 { user }
+ *  - 400 { error, field } on bad input
+ *  - 401 { error } if invalid email/password
+ */
 router.post("/login", async (req, res, next) => {
   try {
     const parsed = loginSchema.safeParse(req.body);
@@ -131,7 +173,8 @@ router.post("/login", async (req, res, next) => {
 
     const token = signJwt({ sub: user.id });
     res.cookie("token", token, cookieOpts());
-    // strip hash before responding
+
+    // never return the hash
     delete user.password_hash;
     return res.json({ user });
   } catch (err) {
@@ -139,12 +182,27 @@ router.post("/login", async (req, res, next) => {
   }
 });
 
+/**
+ * POST /auth/logout
+ *
+ * Clear the auth cookie (immediate expiry).
+ * Response: { ok: true }
+ */
 router.post("/logout", (req, res) => {
-  // Clear cookie by setting empty value & immediate expiry
   res.clearCookie("token", cookieOpts());
   res.json({ ok: true });
 });
 
+/**
+ * GET /auth/me
+ *
+ * Get the current authenticated user, if any.
+ * - Verifies JWT in cookie
+ * - Looks up user by id
+ *
+ * Responses:
+ *  - 200 { user } (or { user: null } if not logged in)
+ */
 router.get("/me", async (req, res, next) => {
   try {
     const token = req.cookies?.token;

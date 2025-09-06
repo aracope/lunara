@@ -1,14 +1,16 @@
 import { pool } from "../db.js";
 import { MOON_API_KEY, MOON_API_URL } from "../config.js";
 
-/** Join "YYYY-MM-DD" + "HH:MM" into a SQL-friendly timestamp string */
+/** Join "YYYY-MM-DD" + "HH:MM" into a SQL-friendly timestamp string.
+ *  Returns null when hhmm is missing/invalid.
+ */
 function combineDateTime(dateYmd, hhmm) {
   if (!hhmm || typeof hhmm !== "string") return null;
   if (!/^\d{1,2}:\d{2}$/.test(hhmm.trim())) return null; // "H:MM" or "HH:MM"
   return `${dateYmd} ${hhmm.trim()}:00`;
 }
 
-/** Round to 2 decimals for caching key stability */
+/** Round to 2 decimals to stabilize cache keys for lat/lon. */
 function round2(n) {
   return Math.round(Number(n) * 100) / 100;
 }
@@ -31,19 +33,37 @@ function toYMD(d) {
  *
  * Returns normalized:
  *  {
- *    phase, moonrise, moonset, zodiacSign,
- *    location: { lat, lon, city, state, country, locality, elevation }
- *  }
+ *   phase: string | null,
+ *   moonrise: "HH:MM" | null,
+ *   moonset: "HH:MM" | null,
+ *   zodiacSign: string | null,
+ *   location: {
+ *     lat: number | null,
+ *     lon: number | null,
+ *     city: string | null,
+ *     state: string | null,
+ *     country: string | null,
+ *     locality: string | null,
+ *     elevation: number | null
+ *   }
+ * }
+ *
+ * Errors:
+ *  - 400: No location provided
+ *  - 500: Missing MOON_API_KEY
+ *  - 502: Network/HTTP error contacting upstream
  */
 async function fetchMoonFromApi({ dateYmd, lat, lon, location, ip }) {
   if (!MOON_API_KEY) {
     throw Object.assign(new Error("Missing MOON_API_KEY"), { status: 500 });
   }
 
-  const url = new URL(MOON_API_URL); // e.g. "https://api.ipgeolocation.io/astronomy"
+  // e.g. "https://api.ipgeolocation.io/astronomy"
+  const url = new URL(MOON_API_URL);
   url.searchParams.set("apiKey", MOON_API_KEY);
   url.searchParams.set("date", dateYmd);
 
+  // NOTE: API expects "long" (not "lon")
   if (typeof lat === "number" && typeof lon === "number") {
     url.searchParams.set("lat", String(lat));
     url.searchParams.set("long", String(lon)); // NOTE: "long" (not "lon")
@@ -64,7 +84,10 @@ async function fetchMoonFromApi({ dateYmd, lat, lon, location, ip }) {
     resp = await fetch(url, { signal: controller.signal });
   } catch (e) {
     clearTimeout(t);
-    throw Object.assign(new Error("Moon API network error"), { status: 502, cause: e });
+    throw Object.assign(new Error("Moon API network error"), {
+      status: 502,
+      cause: e,
+    });
   }
   clearTimeout(t);
 
@@ -78,7 +101,7 @@ async function fetchMoonFromApi({ dateYmd, lat, lon, location, ip }) {
 
   const data = await resp.json();
 
-  // Try both flat & nested shapes defensively
+  // Defensive parsing for different shapes/keys from the API
   const loc = data.location || {};
   const phase =
     data.moon_phase ||
@@ -91,14 +114,20 @@ async function fetchMoonFromApi({ dateYmd, lat, lon, location, ip }) {
   const moonset = data.moonset || data.astronomy?.moonset || null;
   const zodiac = data.moon_zodiac || data.moon_sign || null;
 
-  // Coordinates may come from response.location; otherwise pass through inputs
+  // // Prefer response coords; fall back to inputs
   const outLat =
-    loc.latitude !== undefined ? Number(loc.latitude) :
-    typeof lat === "number" ? lat : null;
+    loc.latitude !== undefined
+      ? Number(loc.latitude)
+      : typeof lat === "number"
+      ? lat
+      : null;
 
   const outLon =
-    loc.longitude !== undefined ? Number(loc.longitude) :
-    typeof lon === "number" ? lon : null;
+    loc.longitude !== undefined
+      ? Number(loc.longitude)
+      : typeof lon === "number"
+      ? lon
+      : null;
 
   return {
     phase,
@@ -118,22 +147,29 @@ async function fetchMoonFromApi({ dateYmd, lat, lon, location, ip }) {
 }
 
 /**
- * getMoonFor(date, lat, lon, locationStr, ip)
+ * Get moon data for a date and place, with 24h DB caching by rounded coords.
  *
- * Accepts *either*:
- *  - coords (lat, lon) numbers
- *  - a human location string (locationStr)
- *  - an IP address (ip)
+ * Inputs (one of):
+ *  - (date, lat, lon)
+ *  - (date, locationStr)
+ *  - (date, ip)
  *
  * Behavior:
- *  1) Calls the API to normalize to coordinates and get human-friendly labels.
- *  2) Caches by (for_date, rounded lat, rounded lon) for 24h.
- *  3) Returns { date, phase, moonrise, moonset, zodiacSign, location: { ... } }
+ *  1) Resolve inputs via API to coords + friendly labels.
+ *  2) Check cache by (for_date, round2(lat), round2(lon)) and freshness (<= 24h).
+ *  3) If stale/missing, upsert new data, then return normalized payload.
+ *
+ * Returns:
+ * {
+ *   date: "YYYY-MM-DD",
+ *   phase, moonrise, moonset, zodiacSign,
+ *   location: { lat, lon, city, state, country, locality, elevation }
+ * }
  */
 export async function getMoonFor(date, lat, lon, locationStr, ip) {
   const forDate = toYMD(date || new Date());
 
-  // First call: resolve inputs -> canonical coords + friendly labels
+  // Step 1: resolve inputs -> canonical coords + labels
   const first = await fetchMoonFromApi({
     dateYmd: forDate,
     lat: typeof lat === "number" ? round2(lat) : undefined,
@@ -145,7 +181,7 @@ export async function getMoonFor(date, lat, lon, locationStr, ip) {
   const rLat = round2(first.location.lat);
   const rLon = round2(first.location.lon);
 
-  // 1) Check cache by normalized coords
+  // Step 2: check cache
   const { rows } = await pool.query(
     `SELECT id, for_date, lat, lon, phase, moonrise, moonset,
             created_at, (NOW() - created_at) <= INTERVAL '24 hours' AS fresh
@@ -171,8 +207,7 @@ export async function getMoonFor(date, lat, lon, locationStr, ip) {
     };
   }
 
-  // 2) If missing/stale, we already have fresh phase/moonrise/moonset from `first`.
-  //    Upsert cache and return.
+  // Step 3: upsert & return fresh data from API-normalized result
   const upsert = await pool.query(
     `INSERT INTO moon_data (for_date, lat, lon, phase, moonrise, moonset)
      VALUES ($1, $2, $3, $4, $5, $6)

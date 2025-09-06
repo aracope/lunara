@@ -7,7 +7,7 @@ export default {
     "src/**/*.js",
     "!src/server.js",
     "!src/app.js",
-    "!src/config.js"
+    "!src/config.js",
   ],
   transform: {},
 };
