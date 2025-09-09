@@ -1,6 +1,33 @@
 import React, { useState } from 'react';
 import { api } from '../lib/apiClient.js';
 
+/**
+ * Signup page
+ *
+ * Purpose:
+ *  - Provides a barebones form for user registration.
+ *  - Calls `api.signup(email, password, displayName)` directly.
+ *
+ * State:
+ *  - email, displayName, password: controlled form inputs
+ *  - msg: status message after submission (success or error)
+ *
+ * Behavior:
+ *  - On submit:
+ *      • Prevents default form behavior.
+ *      • Calls `api.signup(...)`.
+ *      • On success → shows "Registered as {email}".
+ *      • On error → shows the error message.
+ *
+ * Rendering:
+ *  - Simple <form> with email, display name, password, and submit button.
+ *  - Status message always rendered in a <p>.
+ *
+ * Usage:
+ *  - Public route at "/signup".
+ *  - Serves as a fallback alongside the styled <SignupForm /> version.
+ */
+
 export default function Signup() {
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
