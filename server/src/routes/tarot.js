@@ -1,7 +1,12 @@
 import { Router } from "express";
 import { z } from "zod";
-import { pool } from "../db.js";
-import { getCardOfDay, drawYesNo, getCardById } from "../services/tarot.js";
+import {
+  getCardOfDay,
+  drawYesNo,
+  getCardById,
+  getCards,
+} from "../services/tarot.js";
+import { cacheClear } from "../../src/utils/cache.js";
 
 const router = Router();
 
@@ -36,6 +41,15 @@ const yesNoSchema = z.object({
   question: z.string().min(1).max(200).optional(),
 });
 
+// Normalize answer to Title Case (Yes/No/Maybe)
+function normalizeAnswer(data) {
+  if (data?.answer) {
+    const a = String(data.answer);
+    data.answer = a[0].toUpperCase() + a.slice(1).toLowerCase();
+  }
+  return data;
+}
+
 /**
  * POST /tarot/yesno
  *
@@ -48,7 +62,7 @@ router.post("/yesno", async (req, res, next) => {
   try {
     const parsed = yesNoSchema.safeParse(req.body);
     const data = await drawYesNo(parsed.success ? parsed.data : undefined);
-    res.json(data);
+    res.json(normalizeAnswer(data));
   } catch (err) {
     next(err);
   }
@@ -63,7 +77,7 @@ router.post("/yesno", async (req, res, next) => {
 router.get("/yesno", async (_req, res, next) => {
   try {
     const data = await drawYesNo();
-    res.json(data);
+    res.json(normalizeAnswer(data));
   } catch (err) {
     next(err);
   }
@@ -98,34 +112,22 @@ router.get("/cards/:id", async (req, res, next) => {
   }
 });
 
-/**
- * GET /tarot/cards
- *
- * List basic metadata for all cards from the local DB table `tarot_cards`.
- * (Useful for dropdowns, search, etc.)
- *
- * Response:
- *  { cards: [{ id, name, arcana, suit }, ...] }
- *
- * Ordering:
- *  - Major Arcana first
- *  - Then Minor by suit (NULLS FIRST)
- *  - Then by id
- */
 router.get("/cards", async (req, res, next) => {
   try {
-    const { rows } = await pool.query(
-      `SELECT id, name, arcana, suit
-         FROM tarot_cards
-         ORDER BY
-           CASE WHEN arcana='Major' THEN 0 ELSE 1 END,
-           suit NULLS FIRST,
-           id`
-    );
-    res.json({ cards: rows });
+    const data = await getCards(req.query);
+    res.json(data);
   } catch (err) {
     next(err);
   }
 });
 
 export default router;
+
+/*
+NOTES FOR FUTURE ARA:
+- /tarot/cards is now proxied & cached (see services/tarot.js). No need for local DB seed.
+- If you add multi-card draw support in UI, expose POST /tarot/draw here and wire
+  to a new drawCards(count) service helper.
+- Health of upstream can be checked via a tiny GET /tarot/health route that calls
+  getCards({ limit:1 }) with a 1s timeout.
+*/
