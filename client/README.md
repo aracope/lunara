@@ -1,12 +1,16 @@
-# React + Vite
+README — Client-side Auth Flow
+## Auth flow overview
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+- AuthContext exposes { user, authLoaded, login, logout }.
 
-Currently, two official plugins are available:
+    - authLoaded prevents premature redirects while the app is restoring a session (e.g., checking a cookie/JWT).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+    - user is null when logged out and an object when authenticated.
 
-## Expanding the ESLint configuration
+- ProtectedRoute (client/src/components/ProtectedRoute.jsx)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+    - Shows a loading state until authLoaded is true.
+
+    - If there’s no user, redirects to /login and preserves the originally requested route via location in state.from.
+
+    - If user exists, renders the nested route (<Outlet />).
