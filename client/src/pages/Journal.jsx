@@ -3,6 +3,38 @@ import { api } from '../lib/apiClient.js';
 import JournalMoon from '../components/JournalMoon.jsx';
 import './Journal.css';
 
+/**
+ * Journal
+ *
+ * Purpose:
+ *  - Allows users to view, add, and optionally attach moon data to journal entries.
+ *
+ * State:
+ *  - entries: list of journal entries fetched from server
+ *  - title: input for new entry title
+ *  - body: input for new entry body
+ *  - attachMoon: boolean, whether to attach today's moon data to new entry
+ *
+ * Data flow:
+ *  - On mount, calls `api.listJournal()` to populate entries.
+ *  - On submit:
+ *      • Builds payload { title, body }.
+ *      • If `attachMoon` is true:
+ *          – Computes today’s date in YYYY-MM-DD (tz aware).
+ *          – Adds `moonRef` object with date and tz.
+ *      • Calls `api.createJournal(payload)`.
+ *      • Clears form inputs, then refreshes entries.
+ *
+ * Rendering:
+ *  - Form: title input, body textarea, attachMoon checkbox, add button.
+ *  - Entries list:
+ *      • Shows title + body for each.
+ *      • If entry has `moon_data_id`, renders <JournalMoon refData={...}>.
+ *
+ * Usage:
+ *  - Protected page, usually nested under <ProtectedRoute>.
+ */
+
 export default function Journal() {
   const [entries, setEntries] = useState([]);
   const [title, setTitle] = useState('First entry');
