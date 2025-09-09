@@ -2,6 +2,40 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../lib/apiClient.js';
 import './Tarot.css';
 
+/**
+ * Tarot page
+ *
+ * Purpose:
+ *  - Lets users: draw a daily card, ask a yes/no question, or browse card details.
+ *
+ * Data sources (apiClient):
+ *  - tarotList(): fetches full deck metadata for the <select> (grouped by Major/Minor suits)
+ *  - tarotDaily(): returns one random "card of the day"
+ *  - tarotYesNo(question?): returns { answer|result|outcome, reason?, card? }
+ *  - tarotCard(id): returns details for a specific card by id
+ *
+ * State:
+ *  - daily: last "card of the day" result (null when not drawn)
+ *  - yn: last yes/no result (null when not asked)
+ *  - card: currently selected card details (null when not fetched)
+ *  - allCards: list of all cards (for the select dropdown)
+ *  - selectedId: id from the dropdown (string)
+ *
+ * Rendering:
+ *  - Hero header and three actions:
+ *      • Button → "Card of the day"
+ *      • Form → Yes/No question
+ *      • Form → Select card and fetch
+ *  - Results grid shows panels for any of {daily, yn, card} that are present.
+ *
+ * Components:
+ *  - TarotCardView: tolerant to { card: {...} } or a flat card object.
+ *  - YesNoBadge: displays Yes/No/Maybe label with a style class.
+ *
+ * Resilience:
+ *  - Each call uses try/catch; on failure, section simply stays unchanged.
+ */
+
 function groupCards(cards) {
   const majors = cards.filter(c => c.arcana === 'Major');
   const bySuit = {
