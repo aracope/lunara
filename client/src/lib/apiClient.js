@@ -1,3 +1,49 @@
+/**
+ *
+ * Purpose:
+ *  - Thin wrapper around `fetch` for the client.
+ *  - Centralizes base URL, JSON handling, credentials, and error formatting.
+ *  - Exposes a small `api` surface for auth, journal, moon, and tarot endpoints.
+ *
+ * Base URL:
+ *  - Reads VITE_API_BASE (e.g., "https://api.example.com") and strips trailing slashes.
+ *  - Falls back to "http://localhost:3001" in dev.
+ *
+ * request(path, options):
+ *  - Sends requests with `credentials: "include"` so HttpOnly cookies flow.
+ *  - If `body` is provided, JSON-encodes it and sets "Content-Type: application/json".
+ *  - Parses JSON when content-type includes `application/json`, otherwise returns text.
+ *  - On non-2xx responses, throws Error("<status>: <message>") where message comes from
+ *    JSON `{error}` field or the raw text body.
+ *
+ * qs(obj):
+ *  - Builds URLSearchParams, removing null/undefined and empty/whitespace-only values.
+ *  - Trims values before adding.
+ *
+ * API methods:
+ *  - Auth: me, login(email, password), signup(email, password, displayName?), logout
+ *    - `signup` trims `displayName` and omits it if blank.
+ *  - Journal: listJournal, createJournal(payload), updateJournal(id, payload)
+ *  - Moon:
+ *    - moonToday(params) where `params` is an object (e.g., {location, lat, lon, useClientIp})
+ *    - moonToday(lat, lon) overload: numbers for coords are accepted as separate params
+ *    - moonTodayByPlace(place), moonTodayByCoords(lat, lon), moonTodayByIp()
+ *    - moonOn(dateYmd, where) for historical lookups (where can be {location} or {lat, lon})
+ *  - Tarot: tarotDaily, tarotYesNo(question), tarotCard(id), tarotList
+ *
+ * Usage:
+ *   import { api } from "./apiClient";
+ *   const { user } = await api.me();
+ *   const today = await api.moonToday({ location: "Boise, ID" });
+ *
+ * Error handling pattern:
+ *   try {
+ *     await api.login(email, password);
+ *   } catch (err) {
+ *     // err.message might be "401: Invalid credentials"
+ *   }
+ */
+
 const BASE = (import.meta.env.VITE_API_BASE || "http://localhost:3001").replace(
   /\/+$/,
   ""
