@@ -1,9 +1,34 @@
-// client/src/components/auth/LoginForm.jsx
 import React from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { useNavigate } from 'react-router-dom';
 import * as Yup from 'yup';
+
+/**
+ * LoginForm
+ *
+ * Purpose:
+ *  - Handles user sign-in with Formik + Yup validation.
+ *  - On success, calls `login(email, password)` from AuthContext and navigates to `/dashboard`.
+ *  - On failure, shows a status message from the thrown error.
+ *
+ * Validation (Yup):
+ *  - email: required, valid email format
+ *  - password: required, min length 8
+ *
+ * Accessibility:
+ *  - Associates labels with inputs via `htmlFor` / `id`.
+ *  - Surfaces inline validation via <ErrorMessage /> and proper ARIA attributes.
+ *  - Server/status errors rendered in an element with `role="status"`.
+ *
+ * Behavior:
+ *  - While submitting, disables the submit button and shows "Signing in…".
+ *  - Clears any previous status on new submit.
+ *
+ * Usage:
+ *  <LoginForm />
+ *  Typically used inside the Login page routed at `/login`.
+ */
 
 const schema = Yup.object({
   email: Yup.string().email('Please enter a valid email').required('Email is required'),
