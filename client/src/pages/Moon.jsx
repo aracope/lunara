@@ -3,6 +3,43 @@ import { api } from '../lib/apiClient.js';
 import './Moon.css';
 import MoonResult from '../components/MoonResult.jsx';
 
+/**
+ * Moon page
+ *
+ * Purpose:
+ *  - Allows users to fetch today's moon phase by city/place, coordinates, or IP.
+ *  - Provides optional "Use my device" to autofill geolocation into coords mode.
+ *
+ * State:
+ *  - mode: current lookup mode ("place" | "coords" | "ip")
+ *  - place: user-entered location string
+ *  - lat/lon: coordinate inputs
+ *  - data: moon API response (or error)
+ *  - loading: whether a fetch is in progress
+ *
+ * Data flow:
+ *  - On form submit:
+ *      • mode=place → api.moonToday({ location })
+ *      • mode=coords → api.moonToday({ lat, lon })
+ *      • mode=ip → api.moonToday({ useClientIp: "1" })
+ *  - Sets `data` with either result or { error }.
+ *
+ * Rendering:
+ *  - Radio buttons toggle mode.
+ *  - Inputs change depending on mode.
+ *  - Shows loading state on button while fetching.
+ *  - If `data.error`, shows status box.
+ *  - Otherwise renders <MoonResult data={...} />.
+ *
+ * Geolocation:
+ *  - useDeviceLocation() uses navigator.geolocation if available.
+ *  - On success → updates mode to "coords" and populates lat/lon.
+ *  - On error → sets { error } in `data`.
+ *
+ * Usage:
+ *  - Public route at "/moon".
+ */
+
 export default function Moon() {
   const [mode, setMode] = useState('place'); // 'place' | 'coords' | 'ip'
   const [place, setPlace] = useState('Boise, ID');
