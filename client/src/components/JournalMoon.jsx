@@ -2,6 +2,31 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../lib/apiClient.js';
 import { fmtDate, fmtTimeWithDay, tzOrDefault, titleize } from '../lib/format.js';
 
+
+/**
+ * JournalMoon
+ *
+ * Purpose:
+ *  - Fetches and displays moon data (phase, rise/set) for a given journal entry date.
+ *  - Chooses lookup by coordinates (lat/lon) when available, else by human-readable location label.
+ *
+ * Props:
+ *  - refData: {
+ *      date_ymd: string (YYYY-MM-DD),
+ *      lat?: number | null,
+ *      lon?: number | null,
+ *      location_label?: string,   // e.g., "Boise, ID, USA"
+ *      tz?: string | null         // preferred timezone override
+ *    }
+ *
+ * Behavior:
+ *  - On mount or when `refData` changes, calls `api.moonOn(date, {lat,lon}|{location})`.
+ *  - Renders nothing until data arrives (returns `null` as a loading state).
+ *  - Uses `tzOrDefault(refData.tz || data.timezone)` for consistent formatting.
+ *  - Semantic markup: header/title + <dl> with <time> elements.
+ *
+ */
+
 export default function JournalMoon({ refData }) {
   const [data, setData] = useState(null);
 

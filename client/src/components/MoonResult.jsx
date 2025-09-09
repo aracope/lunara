@@ -1,6 +1,41 @@
 import { fmtDate, fmtTimeWithDay, titleize, tzOrDefault } from '../lib/format.js';
 import { formatLocation } from '../lib/location.js';
 
+/**
+ * MoonResult component
+ *
+ * Purpose:
+ *  - Displays the results of a moon phase lookup.
+ *  - Renders the date, moon phase, moonrise/set times, zodiac sign, and location.
+ *
+ * Props:
+ *  - data: {
+ *      date: string (ISO),
+ *      phase: string,
+ *      moonrise: string | null,
+ *      moonset: string | null,
+ *      zodiacSign: string,
+ *      location: { city?, state?, country?, ... },
+ *      timezone: string (optional)
+ *    }
+ *
+ * Behavior:
+ *  - Uses utilities from ../lib/format.js and ../lib/location.js to ensure
+ *    consistent formatting (e.g. `fmtDate`, `fmtTimeWithDay`, `titleize`, `formatLocation`).
+ *  - Falls back to `tzOrDefault` if timezone is missing.
+ *  - Uses semantic HTML (`<time>`, `<dl>`) for accessibility.
+ *
+ * Styling:
+ *  - `moon-result`, `surface--metal-dark`, `moon-kv`, etc. classes apply styles
+ *    defined in CSS theme.
+ *
+ * Usage:
+ *  Typically rendered inside the Moon page once API data is fetched:
+ *
+ *  <MoonResult data={moonData} />
+ */
+
+
 export default function MoonResult({ data }) {
     const tz = tzOrDefault(data?.timezone);
     return (
