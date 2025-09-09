@@ -2,6 +2,25 @@ import React from 'react';
 import LoginForm from '../components/auth/LoginForm.jsx';
 import './Login.css';
 
+/**
+ * Login page
+ *
+ * Purpose:
+ *  - Presents the branded login layout and hosts the <LoginForm />.
+ *  - Provides a link to the signup page for new users.
+ *
+ * Structure:
+ *  - Left: brand/mood copy (title + subtitle).
+ *  - Right: card with page title, subtitle, and <LoginForm />.
+ *
+ * Behavior:
+ *  - All authentication logic lives inside <LoginForm />.
+ *  - This page is unprotected (public) so users can sign in.
+ *
+ * Usage:
+ *  - Route at "/login".
+ */
+
 export default function Login() {
   return (
     <section className="login">
