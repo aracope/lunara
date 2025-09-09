@@ -1,3 +1,32 @@
+/**
+ * Dashboard
+ *
+ * Purpose:
+ *  - Landing page for signed-in users with a quick snapshot:
+ *    • Personalized welcome (display_name → email → fallback text)
+ *    • Account info card
+ *    • Quick actions (Moon, Tarot, Journal)
+ *    • Recent journal entries (top 3)
+ *
+ * Data flow:
+ *  - On mount, fetches in parallel:
+ *      - `api.me()` → current user (gracefully falls back to null on error)
+ *      - `api.listJournal()` → journal entries ([] on error)
+ *  - Shows "Loading…" until both requests complete.
+ *  - Uses an `alive` flag to avoid setting state after unmount.
+ *
+ * Rendering:
+ *  - Recent entries list is limited to the 3 most recent: `entries.slice(0, 3)`.
+ *  - Each entry displays title, created date, and a 140-char snippet.
+ *
+ * Accessibility & UX:
+ *  - Semantic sectioning and headings.
+ *  - Buttons/links route to Moon, Tarot, Journal, and manage account (placeholder).
+ *
+ * Usage:
+ *  - Route-protected page; typically nested under a <ProtectedRoute>.
+ */
+
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/apiClient.js';
