@@ -45,6 +45,11 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [authLoaded, setAuthLoaded] = useState(false);
+  const refresh = useCallback(async () => {
+    const data = await api.me();
+    setUser(data?.user || null);
+    return data?.user || null;
+  }, []);
 
   // hydrate session on first load
   useEffect(() => {
@@ -65,6 +70,7 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (email, password) => {
     await api.login(email, password);
     const data = await api.me();
+    const u = data?.user || null;
     const login = useCallback
     setUser(u);
     return u;
@@ -82,8 +88,13 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  const deactivate = useCallback(async () => {
+    await api.deactivate();
+    setUser(null);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, authLoaded, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, authLoaded, login, signup, logout, deactivate, refresh }}>
       {children}
     </AuthContext.Provider>
   );

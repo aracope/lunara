@@ -127,7 +127,7 @@ export default function Dashboard() {
             </dl>
             <div className="dash-actions">
               <Link to="/journal" className="btn btn--metal">Open Journal</Link>
-              <Link to="/signup" className="btn btn--metal-dark">Manage Account
+              <Link to="/account" className="btn btn--metal-dark">Manage Account
               </Link>
             </div>
           </article>

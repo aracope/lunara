@@ -1,0 +1,70 @@
+.navbar-header {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.muted {
+  color: var(--fg-muted);
+}
+
+.navbar {
+  display: flex;
+  gap: var(--gap-3);
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  margin-right: auto;
+  text-decoration: none;
+  color: inherit;
+}
+
+.nav-link {
+  display: inline-block;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--fg);
+  transition: background .2s ease, color .2s ease, transform .1s ease;
+}
+
+/* Default = text only, transparent background */
+.nav-link:hover {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.nav-link.active {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.navbar-user {
+  align-self: center;
+  opacity: 0.8;
+}
+
+/* Login button: always brand */
+.nav-link.login-link {
+  background: var(--fg);
+  color: var(--bg);
+}
+.nav-link.login-link:hover {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+/* Logout button: inverse style */
+.logout-btn {
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--fg);
+}
+.logout-btn:hover {
+  background: var(--fg);
+  color: var(--bg);
+}
+

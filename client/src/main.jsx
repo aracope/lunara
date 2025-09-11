@@ -11,6 +11,7 @@ import Moon from './pages/Moon.jsx';
 import Tarot from './pages/Tarot.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import PublicHome from './pages/PublicHome.jsx';
+import AccountManagement from './pages/AccountManagement.jsx';
 
 const router = createBrowserRouter([
   {
@@ -29,7 +30,8 @@ const router = createBrowserRouter([
         element: <ProtectedRoute />,
         children: [
           { path: '/dashboard', element: <Dashboard /> },
-          { path: '/journal', element: <Journal /> }
+          { path: '/journal', element: <Journal /> },
+          { path: '/account', element: <AccountManagement /> }
         ]
       }
     ]

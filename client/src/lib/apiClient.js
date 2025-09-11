@@ -98,6 +98,15 @@ export const api = {
     return request("/auth/register", { method: "POST", body });
   },
   logout: () => request("/auth/logout", { method: "POST" }),
+  updateEmail: (email) =>
+    request("/auth/email", { method: "PUT", body: { email } }),
+
+  updatePassword: (current_password, new_password) =>
+    request("/auth/password", {
+      method: "PUT",
+      body: { current_password, new_password },
+    }),
+  deactivate: () => request("/auth/deactivate", { method: "POST" }),
 
   // Journal
   listJournal: () => request("/journal"),
@@ -118,7 +127,7 @@ export const api = {
   moonTodayByCoords: (lat, lon) => request(`/moon/today?${qs({ lat, lon })}`),
   moonTodayByIp: () => request(`/moon/today?${qs({ useClientIp: "1" })}`),
 
-  // NEW: historical/on-date lookup
+  // Historical/on-date lookup
   moonOn: (dateYmd, where) => {
     const params = { date: dateYmd, ...(where || {}) };
     return request(`/moon/on?${qs(params)}`);

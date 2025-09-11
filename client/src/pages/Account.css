@@ -1,0 +1,15 @@
+/* layout + light utilities for AccountManagement */
+
+.settings {
+  max-width: 640px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  display: grid;
+  gap: 24px; /* page rhythm */
+}
+
+/* Reuse your surface look, just add consistent padding/radius */
+.surface--padded {
+  padding: 1rem;
+  border-radius: var(--radius-md, 8px);
+}
