@@ -132,6 +132,15 @@
     opacity: .95;
 }
 
+.auth__brand-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.auth__brand-link:hover {
+    opacity: 0.95;
+}
+
 /* Mobile: stretch button for easy tap */
 @media (max-width: 480px) {
     .auth__actions .btn {

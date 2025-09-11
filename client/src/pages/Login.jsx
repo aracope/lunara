@@ -31,7 +31,9 @@ export default function Login() {
         {/* Left: brand / mood */}
         <aside className="auth__brand">
           <div className="auth__brand-inner">
-            <h1 className="auth__title metal-text sheen">Lunara</h1>
+            <h1 className="auth__title metal-text sheen">
+              <Link to="/" className="auth__brand-link">Lunara</Link>
+            </h1>
             <p className="auth__subtitle">
               Sign in to your Book of Shadows to journal, pull a daily card, and track tonight's moon.
             </p>

@@ -98,14 +98,17 @@
 
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
+
+    /* static crescent */
     .home-title__moon::after {
         animation: none;
         transform: translateX(32%);
     }
 
-    /* static crescent */
+    .card-link-wrapper {
+        transition: none;
+    }
 }
-
 
 .home-subtitle {
     opacity: 0.9;
@@ -150,15 +153,36 @@
 }
 
 /* Links */
-.card-link {
-    text-decoration: none;
-    color: var(--fg);
-}
-
-.card-link:hover {
-    text-decoration: underline;
-}
 
 .card-muted {
     opacity: 0.7;
+}
+
+/* Make the whole card act like a link */
+.card-link-wrapper {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    transition: transform .12s ease, box-shadow .2s ease, opacity .2s ease;
+}
+
+.card-link-wrapper:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, .25);
+}
+
+.card-link-wrapper:active {
+    transform: translateY(-1px);
+}
+
+.home-card--disabled {
+    opacity: .7;
+    cursor: not-allowed;
+}
+
+/* Optional: make CTA stand out a bit */
+.card-cta {
+    display: inline-block;
+    margin-top: .4rem;
+    opacity: .95;
 }

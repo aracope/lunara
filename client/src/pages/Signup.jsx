@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import '../styles/forms.css';
 import '../styles/AuthLayout.css';
 import './Signup.css';
@@ -26,7 +27,9 @@ export default function Signup() {
         {/* Left: brand / mood */}
         <aside className="auth__brand">
           <div className="auth__brand-inner">
-            <h1 className="auth__title metal-text sheen">Lunara</h1>
+            <h1 className="auth__title metal-text sheen">
+              <Link to="/" className="auth__brand-link">Lunara</Link>
+            </h1>
             <p className="auth__subtitle">
               Create your account to start journaling, pull daily cards, and track the moon.
             </p>

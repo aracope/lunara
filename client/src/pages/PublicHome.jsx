@@ -29,7 +29,7 @@ export default function PublicHome() {
   if (user) return <Navigate to="/dashboard" replace />;
 
   return (
-    <section className="home">
+    <section className="home" role="main">
       <div className="home-hero">
         <h1 className="home-title metal-text sheen">
           <span aria-hidden="true" className="home-title__moon" />
@@ -47,23 +47,35 @@ export default function PublicHome() {
       </div>
 
       <div className="home-grid">
-        <div className="home-card surface surface--metal-dark">
+        {/* Clickable cards */}
+        <Link
+          to="/moon"
+          className="home-card surface surface--metal-dark card-link-wrapper"
+          aria-label="Open Moon page">
           <h2>Moon</h2>
           <p>Check today's phase by location.</p>
-          <Link to="/moon" className="card-link">Try Moon →</Link>
-        </div>
+          <span className="card-cta">Try Moon →</span>
+        </Link>
 
-        <div className="home-card surface surface--metal-dark">
+        <Link
+          to="/tarot"
+          className="home-card surface surface--metal-dark card-link-wrapper"
+          aria-label="Open Tarot page">
           <h2>Tarot</h2>
           <p>Card of the day and quick yes/no.</p>
-          <Link to="/tarot" className="card-link">Try Tarot →</Link>
-        </div>
+          <span className="card-cta">Try Tarot →</span>
+        </Link>
 
-        <div className="home-card surface surface--metal-dark">
+        <Link
+          to="/login"
+          className="home-card surface surface--metal-dark card-link-wrapper"
+          aria-label="Sign in to access Journal"
+        >
           <h2>Journal</h2>
           <p>Reflect and connect trends over time.</p>
-          <span className="card-muted">Sign in to use</span>
-        </div>
+          <span className="card-cta">Sign in to use →</span>
+        </Link>
+
       </div>
     </section>
   );
