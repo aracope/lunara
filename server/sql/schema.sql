@@ -42,14 +42,21 @@ CREATE TABLE users (
   email TEXT NOT NULL,
   password_hash TEXT NOT NULL,
   display_name TEXT,
+  -- 'active' | 'inactive'
+  status TEXT NOT NULL DEFAULT 'active',
+  -- when user requested deletion
+  deactivated_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  -- updated on successful login (optional but handy)
   last_login_at TIMESTAMPTZ,
   -- Keep DB in sync with API validation (max 60 chars)
   CONSTRAINT users_display_name_len CHECK (
     display_name IS NULL
     OR char_length(display_name) <= 60
-  )
+  ),
+  -- guard against accidental wrong values (can relax later)
+  CONSTRAINT users_status_chk CHECK (status IN ('active', 'inactive'))
 );
 
 -- Case-insensitive unique on email
@@ -156,17 +163,22 @@ CREATE INDEX IF NOT EXISTS idx_journal_moon_snapshot_gin ON journal USING gin (m
 --   - set_updated_at() ensures updated_at stays fresh w/o app logic
 -- ===================================================================
 CREATE
-OR REPLACE FUNCTION set_updated_at() RETURNS TRIGGER AS $ $ BEGIN NEW.updated_at = NOW();
+OR REPLACE FUNCTION set_updated_at() RETURNS trigger LANGUAGE plpgsql AS $func$ BEGIN NEW.updated_at := NOW();
 
 RETURN NEW;
 
 END;
 
-$ $ LANGUAGE plpgsql;
+$func$;
+
+-- Recreate triggers idempotently
+DROP TRIGGER IF EXISTS trg_journal_updated_at ON journal;
 
 CREATE TRIGGER trg_journal_updated_at BEFORE
 UPDATE
   ON journal FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS trg_users_updated_at ON users;
 
 CREATE TRIGGER trg_users_updated_at BEFORE
 UPDATE

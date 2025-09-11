@@ -115,8 +115,8 @@ router.post("/register", async (req, res, next) => {
       // Map unique-violation to a clear 409 even if the functional index fires
       if (
         err?.code === "23505" &&
-        (err?.constraint === "users_email_lower_unique" || 
-          err?.constraint === "users_email_key" || 
+        (err?.constraint === "users_email_lower_unique" ||
+          err?.constraint === "users_email_key" ||
           (typeof err?.detail === "string" &&
             err.detail.includes("(lower(email))")))
       ) {
@@ -160,16 +160,25 @@ router.post("/login", async (req, res, next) => {
     const { email, password } = parsed.data;
 
     const { rows } = await pool.query(
-      "SELECT id, email, display_name, password_hash, created_at FROM users WHERE email = $1",
+      "SELECT id, email, display_name, password_hash, created_at, status FROM users WHERE email = $1",
       [email.toLowerCase()]
     );
     const user = rows[0];
     if (!user)
       return res.status(401).json({ error: "Invalid email or password" });
 
+    if (user.status === "inactive") {
+      return res.status(403).json({ error: "This account is deactivated." });
+    }
+
     const ok = await bcrypt.compare(password, user.password_hash);
     if (!ok)
       return res.status(401).json({ error: "Invalid email or password" });
+
+    // track last successful login
+    await pool.query("UPDATE users SET last_login_at = NOW() WHERE id = $1", [
+      user.id,
+    ]);
 
     const token = signJwt({ sub: user.id });
     res.cookie("token", token, cookieOpts());
@@ -216,6 +225,123 @@ router.get("/me", async (req, res, next) => {
       [decoded.sub]
     );
     return res.json({ user: rows[0] || null });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+const emailSchema = z
+  .object({
+    email: z.string().trim().email("Please enter a valid email address."),
+  })
+  .strict();
+
+router.put("/email", async (req, res, next) => {
+  try {
+    const token = req.cookies?.token;
+    if (!token) return res.status(401).json({ error: "Unauthorized" });
+    const decoded = verifyJwt(token);
+    if (!decoded?.sub) return res.status(401).json({ error: "Unauthorized" });
+
+    const parsed = emailSchema.safeParse(req.body);
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0];
+      return res
+        .status(400)
+        .json({ error: issue?.message || "Invalid email", field: "email" });
+    }
+    const email = parsed.data.email.toLowerCase();
+
+    // conflict check
+    const { rows: taken } = await pool.query(
+      "SELECT 1 FROM users WHERE lower(email) = $1 AND id <> $2",
+      [email, decoded.sub]
+    );
+    if (taken.length) {
+      return res
+        .status(409)
+        .json({ error: "That email is already registered.", field: "email" });
+    }
+
+    const { rows } = await pool.query(
+      "UPDATE users SET email = $1 WHERE id = $2 RETURNING id, email, display_name, created_at",
+      [email, decoded.sub]
+    );
+
+    return res.json({ user: rows[0] });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+const passwordSchema = z
+  .object({
+    current_password: z
+      .string()
+      .trim()
+      .min(8, "Current password must be at least 8 characters."),
+    new_password: z
+      .string()
+      .trim()
+      .min(8, "New password must be at least 8 characters."),
+  })
+  .strict();
+
+router.put("/password", async (req, res, next) => {
+  try {
+    const token = req.cookies?.token;
+    if (!token) return res.status(401).json({ error: "Unauthorized" });
+    const decoded = verifyJwt(token);
+    if (!decoded?.sub) return res.status(401).json({ error: "Unauthorized" });
+
+    const parsed = passwordSchema.safeParse(req.body);
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0];
+      return res.status(400).json({ error: issue?.message || "Invalid input" });
+    }
+    const { current_password, new_password } = parsed.data;
+
+    const { rows } = await pool.query(
+      "SELECT password_hash FROM users WHERE id = $1",
+      [decoded.sub]
+    );
+    const row = rows[0];
+    if (!row) return res.status(404).json({ error: "User not found" });
+
+    const ok = await bcrypt.compare(current_password, row.password_hash);
+    if (!ok)
+      return res.status(401).json({ error: "Current password is incorrect" });
+
+    const saltRounds = 12;
+    const newHash = await bcrypt.hash(new_password, saltRounds);
+
+    await pool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [
+      newHash,
+      decoded.sub,
+    ]);
+
+    return res.json({ ok: true });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// POST /auth/deactivate
+router.post("/deactivate", async (req, res, next) => {
+  try {
+    const token = req.cookies?.token;
+    if (!token) return res.status(401).json({ error: "Unauthorized" });
+    const decoded = verifyJwt(token);
+    if (!decoded?.sub) return res.status(401).json({ error: "Unauthorized" });
+
+    await pool.query(
+      "UPDATE users SET status = 'inactive', deactivated_at = NOW() WHERE id = $1",
+      [decoded.sub]
+    );
+
+    // clear session cookie
+    res.clearCookie("token", cookieOpts());
+    return res.json({ ok: true });
   } catch (err) {
     return next(err);
   }

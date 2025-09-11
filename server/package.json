@@ -12,7 +12,8 @@
     "db:create": "dotenv -e .env -- sh -c 'createdb lunara || true'",
     "db:schema": "dotenv -e .env -- sh -c 'psql \"$DB_URL\" -f sql/schema.sql'",
     "db:seed": "dotenv -e .env -- sh -c 'psql \"$DB_URL\" -f sql/seed.sql'",
-    "db:schema:test": "dotenv -e .env.test -- sh -c 'psql \"${DB_URL:-$DATABASE_URL}\" -v ON_ERROR_STOP=1 -f sql/schema.sql'"
+    "db:schema:test": "dotenv -e .env.test -- sh -c 'psql \"${DB_URL:-$DATABASE_URL}\" -v ON_ERROR_STOP=1 -f sql/schema.sql'",
+    "migrate": "psql \"$DATABASE_URL\" -f migrations/2025-09-11_add_user_status.sql"
   },
   "keywords": [],
   "author": "",
