@@ -14,6 +14,11 @@
  *      - `api.listJournal()` → journal entries ([] on error)
  *  - Shows "Loading…" until both requests complete.
  *  - Uses an `alive` flag to avoid setting state after unmount.
+ * 
+ * Flash UX:
+ *  - Reads `location.state.flash` (e.g. from Signup/Login redirect)
+ *  - Shows a dismissible/auto-clearing notice for 5s
+ *  - Clears history state to avoid re-showing on refresh/back
  *
  * Rendering:
  *  - Recent entries list is limited to the 3 most recent: `entries.slice(0, 3)`.
@@ -28,7 +33,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../lib/apiClient.js';
 import './Dashboard.css';
 
@@ -37,6 +42,13 @@ export default function Dashboard() {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Read any flash message passed via navigate('/dashboard', { state: { flash: '...' } })
+  const [flash, setFlash] = useState(location.state?.flash);
+
+  // Load user + journal once on mount
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -55,6 +67,19 @@ export default function Dashboard() {
     return () => { alive = false; };
   }, []);
 
+  // Auto-clear the flash after 5s
+  useEffect(() => {
+    if (!flash) return;
+    const t = setTimeout(() => setFlash(null), 5000);
+    return () => clearTimeout(t);
+  }, [flash]);
+
+  // Remove flash from history state so it won't reappear on refresh/back
+  useEffect(() => {
+    if (location.state?.flash) {
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
 
   const recent = entries.slice(0, 3);
 
@@ -71,6 +96,13 @@ export default function Dashboard() {
         <p className="dash-subtitle">Here's your snapshot for today.</p>
       </header>
 
+      {/* Flash notice (auto-clears) */}
+      {flash && (
+        <div className="notice success" role="status" aria-live="polite">
+          {flash}
+        </div>
+      )}
+
       {loading && <div className="dash-loading">Loading…</div>}
 
       {!loading && (
@@ -79,13 +111,24 @@ export default function Dashboard() {
           <article className="dash-card">
             <h2 className="dash-card__title">Account</h2>
             <dl className="dash-kv dash-kv--stack">
-              <div><dt>Name</dt><dd>{me?.display_name || '—'}</dd></div>
-              <div><dt>Email</dt><dd>{me?.email || '—'}</dd></div>
-              <div><dt>Joined</dt><dd>{me?.created_at ? new Date(me.created_at).toLocaleDateString() : '—'}</dd></div>
+              <div>
+                <dt>Name</dt>
+                <dd>{me?.display_name || '—'}</dd>
+              </div>
+              <div>
+                <dt>Email</dt>
+                <dd>{me?.email || '—'}</dd>
+              </div>
+              <div>
+                <dt>Joined</dt>
+                <dd>{me?.created_at ? new Date(me.created_at).toLocaleDateString() : '—'}
+                </dd>
+              </div>
             </dl>
             <div className="dash-actions">
               <Link to="/journal" className="btn btn--metal">Open Journal</Link>
-              <Link to="/signup" className="btn btn--metal-dark">Manage Account</Link>
+              <Link to="/signup" className="btn btn--metal-dark">Manage Account
+              </Link>
             </div>
           </article>
 
@@ -114,13 +157,19 @@ export default function Dashboard() {
                     <span className="dash-muted">
                       {new Date(e.created_at).toLocaleDateString()}
                     </span>
-                    <p className="dash-snippet">{e.body.slice(0, 140)}{e.body.length > 140 ? '…' : ''}</p>
+                    <p className="dash-snippet">
+                      {e.body.slice(0, 140)}
+                      {e.body.length > 140 ? "…" : ""}
+                    </p>
                   </li>
                 ))}
               </ul>
             )}
             <div className="dash-actions">
-              <Link to="/journal" className="btn btn-outline">View all</Link>
+              <Link to="/journal"
+                className="btn btn-outline">
+                View all
+              </Link>
             </div>
           </article>
         </div>

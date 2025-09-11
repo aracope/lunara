@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { useNavigate } from "react-router-dom";
 import * as Yup from 'yup';
 
 /**
@@ -40,6 +41,7 @@ const schema = Yup.object({
 
 export default function SignupForm() {
   const { signup } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <Formik
@@ -49,11 +51,15 @@ export default function SignupForm() {
         setStatus(undefined);
         const { email, password, displayName } = values;
         try {
-          await signup(
+          const user = await signup(
             email,
             password,
             displayName?.trim() ? displayName.trim() : undefined
           );
+          const name = user?.display_name || user?.email || email;
+
+          // Redirect to dashboard with flash message
+          navigate("/dashboard", { state: { flash: `Welcome, ${name}!` } });
         } catch (err) {
           setStatus(err.message || "Signup failed");
         } finally {
@@ -62,65 +68,85 @@ export default function SignupForm() {
       }}
     >
       {({ isSubmitting, status, errors, touched }) => (
-        <Form className="auth-form" noValidate>
-          <label htmlFor="email">Email</label>
-          <Field
-            id="email"
-            name="email"
-            placeholder="email"
-            autoComplete="email"
-            aria-invalid={touched.email && !!errors.email}
-            aria-describedby={
-              touched.email && errors.email ? "email-error" : undefined
-            }
-          />
-          <ErrorMessage
-            id="email-error"
-            name="email"
-            component="div"
-            className="form-error"
-          />
+        <Form className="auth__form" noValidate>
+          <div className="auth__fields">
+            <div className="field">
+              <label htmlFor="email">Email</label>
+              <Field
+                id="email"
+                name="email"
+                type="email"
+                required
+                placeholder="you@example.com"
+                autoComplete="email"
+                aria-invalid={touched.email && !!errors.email}
+                aria-describedby={
+                  touched.email && errors.email ? "email-error" : undefined
+                }
+              />
+              <ErrorMessage
+                id="email-error"
+                name="email"
+                component="div"
+                className="form-error"
+              />
+            </div>
 
-          <label htmlFor="displayName">Display name (optional)</label>
-          <Field
-            id="displayName"
-            name="displayName"
-            placeholder="display name"
-            aria-invalid={touched.displayName && !!errors.displayName}
-            aria-describedby={
-              touched.displayName && errors.displayName
-                ? "displayName-error"
-                : undefined
-            }
-          />
-          <ErrorMessage
-            id="displayName-error"
-            name="displayName"
-            component="div"
-            className="form-error"
-          />
+            <div className="field">
+              <label htmlFor="displayName">Display name (optional)</label>
+              <Field
+                id="displayName"
+                name="displayName"
+                placeholder="e.g., Ara"
+                aria-invalid={touched.displayName && !!errors.displayName}
+                aria-describedby={
+                  touched.displayName && errors.displayName
+                    ? "displayName-error"
+                    : undefined
+                }
+              />
+              <ErrorMessage
+                id="displayName-error"
+                name="displayName"
+                component="div"
+                className="form-error"
+              />
+            </div>
 
-          <label htmlFor="password">Password</label>
-          <Field
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="new-password"
-            aria-invalid={touched.password && !!errors.password}
-            aria-describedby={
-              touched.password && errors.password ? "password-error" : undefined
-            }
-          />
-          <ErrorMessage
-            id="password-error"
-            name="password"
-            component="div"
-            className="form-error"
-          />
+            <div className="field">
+              <label htmlFor="password">Password</label>
+              <Field
+                id="password"
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                required
+                autoComplete="new-password"
+                aria-invalid={touched.password && !!errors.password}
+                aria-describedby={
+                  touched.password && errors.password
+                    ? "password-error"
+                    : undefined
+                }
+              />
+              <ErrorMessage
+                id="password-error"
+                name="password"
+                component="div"
+                className="form-error"
+              />
+            </div>
+          </div>
 
-          <button type="submit" disabled={isSubmitting}>
-            Create account
-          </button>
+          <div className="auth__actions">
+            <button
+              type="submit"
+              className="btn btn--metal"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Creating…" : "Create account"}
+            </button>
+          </div>
 
           {status && (
             <div role="status" className="form-status">

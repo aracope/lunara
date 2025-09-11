@@ -46,8 +46,13 @@ export default function LoginForm() {
       onSubmit={async (values, { setStatus, setSubmitting }) => {
         setStatus(undefined);
         try {
-          await login(values.email, values.password);
-          navigate('/dashboard');
+          const user = await login(values.email, values.password);
+          const name =
+            user?.display_name || user?.email || values.email;
+
+          navigate("/dashboard", {
+            state: { flash: `Welcome back, ${name}!` },
+          });
         } catch (err) {
           setStatus(err.message || 'Login failed');
         } finally {
@@ -56,10 +61,10 @@ export default function LoginForm() {
       }}
     >
       {({ isSubmitting, status, errors, touched }) => (
-        <Form className="auth-form" noValidate>
+        <Form className="auth__form" noValidate>
           {/* Field stack */}
-          <div className="login__fields">
-            <div>
+          <div className="auth__fields">
+            <div className="field">
               <label htmlFor="email">Email</label>
               <Field
                 id="email"
@@ -67,6 +72,7 @@ export default function LoginForm() {
                 type="email"
                 placeholder="you@example.com"
                 autoComplete="email"
+                required
                 aria-invalid={touched.email && !!errors.email}
                 aria-describedby={touched.email && errors.email ? 'email-error' : undefined}
               />
@@ -78,7 +84,7 @@ export default function LoginForm() {
               />
             </div>
 
-            <div>
+            <div className="field">
               <label htmlFor="password">Password</label>
               <Field
                 id="password"
@@ -86,6 +92,7 @@ export default function LoginForm() {
                 type="password"
                 placeholder="••••••••"
                 autoComplete="current-password"
+                required
                 aria-invalid={touched.password && !!errors.password}
                 aria-describedby={touched.password && errors.password ? 'password-error' : undefined}
               />
@@ -97,18 +104,18 @@ export default function LoginForm() {
               />
             </div>
 
-            {/* Remember + forgot row (optional link for later) */}
+            {/* Remember + forgot row (POST MVP) */}
             <div className="login__row">
-              <label className="login__checkbox">
+              {/* <label className="login__checkbox">
                 <input type="checkbox" name="remember" />
                 <span>Remember me</span>
               </label>
-              <a href="/reset-password">Forgot password?</a>
+              <a href="/reset-password">Forgot password?</a> */}
             </div>
           </div>
 
           {/* Actions */}
-          <div className="login__actions">
+          <div className="auth__actions">
             <button
               type="submit"
               className="btn btn--metal"
@@ -123,7 +130,6 @@ export default function LoginForm() {
             <div
               role="status"
               className="form-status"
-              style={{ marginTop: '0.75rem' }}
             >
               {status}
             </div>

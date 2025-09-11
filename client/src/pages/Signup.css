@@ -1,0 +1,19 @@
+/* Page-specific tweaks for Signup */
+
+.signup__form-head {
+    margin: 0 0 1rem;
+}
+
+.signup__form-title {
+    font-size: clamp(1.25rem, 1.3vw + 1rem, 1.75rem);
+}
+
+.signup__form-subtitle {
+    opacity: .9;
+    margin: .35rem 0 0;
+}
+
+.signup__hint {
+    margin-top: .75rem;
+    opacity: .95;
+}

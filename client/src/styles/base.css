@@ -10,3 +10,28 @@ main {
   margin: 2rem auto;
   padding: 0 1rem;
 }
+
+.notice {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm, 6px);
+  margin: 0 0 1rem;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.notice.success {
+  background: rgba(0, 200, 120, 0.15);
+  border: 1px solid rgba(5, 223, 136, 0.425);
+  color: var(--fg, #fff);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

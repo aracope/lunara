@@ -29,6 +29,8 @@
      padding: var(--field-py, 0.5rem) var(--field-px, 0.6rem);
      font-size: var(--field-font-size, 1rem);
      min-height: var(--field-min-tap, 44px);
+     width: 100%;
+     box-sizing: border-box;
 
  }
 
@@ -49,4 +51,8 @@
      outline: 2px solid var(--metal-b);
      outline-offset: 2px;
      border-color: transparent;
+ }
+
+ .form-status {
+     margin-top: 0.75rem;
  }
