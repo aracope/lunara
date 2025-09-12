@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../lib/apiClient.js';
 import { fmtDate, fmtTimeWithDay, tzOrDefault, titleize } from '../lib/format.js';
 
-
 /**
  * JournalMoon
  *
