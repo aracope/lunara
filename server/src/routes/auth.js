@@ -67,10 +67,21 @@ function cookieOpts() {
  *  - Insert user into DB
  *  - Issue JWT in httpOnly cookie
  *
- * Responses:
- *  - 201 { user }
- *  - 400 { error, field } on bad input
- *  - 409 { error, field } if email already registered
+ * Dev Notes:
+ * - Using `ON CONFLICT ON CONSTRAINT users_email_lower_unique DO NOTHING`
+ *   ensures we avoid relying on Postgres error code 23505. This way the logic
+ *   is clearer and portable: if no row is returned, we know the email already
+ *   exists and can respond with 409.
+ *
+ * - `const user = rows[0]`:
+ *   Each row is a plain JS object (not a class instance). Since we RETURN only
+ *   one row, rows[0] is our single user object. We need this to issue the JWT
+ *   and include in the response.
+ *
+ * - This keeps responses predictable:
+ *   201 → created and logged in
+ *   400 → validation failure
+ *   409 → email conflict
  */
 router.post("/register", async (req, res, next) => {
   try {
