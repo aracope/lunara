@@ -14,7 +14,7 @@ const router = Router();
  */
 const registerSchema = z
   .object({
-    email: z.string().trim().email("Please enter a valid email address."),
+    email: z.email({ message: "Please enter a valid email address." }),
     password: z
       .string()
       .trim()
@@ -31,7 +31,7 @@ const registerSchema = z
 
 const loginSchema = z
   .object({
-    email: z.string().trim().email("Please enter a valid email address."),
+    email: z.email({ message: "Please enter a valid email address." }),
     password: z
       .string()
       .trim()
@@ -232,7 +232,7 @@ router.get("/me", async (req, res, next) => {
 
 const emailSchema = z
   .object({
-    email: z.string().trim().email("Please enter a valid email address."),
+    email: z.email({ message: "Please enter a valid email address." }),
   })
   .strict();
 

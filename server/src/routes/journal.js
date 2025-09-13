@@ -6,27 +6,36 @@ import { requireAuth } from "../middleware/auth.js";
 const router = Router();
 
 /** Schemas
- * moonSnapshot: optional denormalized moon info stored alongside an entry.
- * - date_ymd: "YYYY-MM-DD" (UTC)
- * - tz: IANA timezone string (e.g., "America/Boise")
- * - lat/lon: both required together if present
- * - location_label: friendly label, max 120 chars (e.g., "Boise, ID")
+ * -------
+ * moonSnapshot (camelCase in API; stored as JSONB column `moon_snapshot`):
+ *  - date_ymd (required): "YYYY-MM-DD" (UTC reference date)
+ *  - tz (optional): IANA timezone, e.g. "America/Boise"
+ *  - lat/lon (optional as a pair): both must be present if either is provided
+ *  - location_label (optional): friendly human label (e.g., "Boise, ID")
+ *  - phase/moonrise/moonset/zodiacSign (optional): enriched fields for
+ *    instant rendering/offline resilience; if missing, the client can fetch.
  */
 const moonSnapshotSchema = z
   .object({
-    date_ymd: z.string().regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/),
-    tz: z.string().min(1),
-    lat: z.number().optional(),
-    lon: z.number().optional(),
-    location_label: z.string().max(120).optional(),
+    date_ymd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    tz: z.string().min(1).optional().nullable(),
+    lat: z.number().optional().nullable(),
+    lon: z.number().optional().nullable(),
+    location_label: z.string().optional().nullable(),
+    // optional enriched fields for instant rendering
+    phase: z.string().optional().nullable(),
+    moonrise: z.string().optional().nullable(),
+    moonset: z.string().optional().nullable(),
+    zodiacSign: z.string().optional().nullable(),
   })
   .refine(
-    (v) => (v.lat == null && v.lon == null) || (v.lat != null && v.lon != null),
-    {
-      message: "lat and lon must be provided together",
-      path: ["lat"],
-    }
-  );
+    (s) =>
+      // lat & lon must be both present or both absent/null
+      (s.lat == null && s.lon == null) ||
+      (typeof s.lat === "number" && typeof s.lon === "number"),
+    { message: "lat/lon must be provided together" }
+  )
+  .strict();
 
 /**
  * Create payload
@@ -53,8 +62,8 @@ const updateSchema = z
   .object({
     title: z.string().min(1).max(200).optional(),
     body: z.string().min(1).optional(),
-    moon_data_id: z.number().int().positive().nullable().optional(),
     tarot_card_id: z.number().int().positive().nullable().optional(),
+    moon_data_id: z.number().int().positive().nullable().optional(),
     moonSnapshot: moonSnapshotSchema.nullable().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
@@ -75,8 +84,7 @@ const updateSchema = z
 router.get("/", requireAuth, async (req, res, next) => {
   try {
     const { rows } = await pool.query(
-      `SELECT id, user_id, title, body, tarot_card_id, moon_data_id, moon_snapshot,
-              created_at, updated_at
+      `SELECT id, user_id, title, body, tarot_card_id, moon_data_id, moon_snapshot, created_at, updated_at
          FROM journal
         WHERE user_id = $1
         ORDER BY created_at DESC`,
@@ -157,12 +165,15 @@ router.post("/", requireAuth, async (req, res, next) => {
 /** PATCH /journal/:id  * Auth: required
  * Update fields on a single entry owned by the current user.
  *
- * - Validates :id (positive integer)
- * - Dynamically builds a parameterized UPDATE
- * - Sets updated_at = NOW()
+ * Behavior:
+ *  - Validates :id (positive integer)
+ *  - Validates body (at least one field)
+ *  - FK fields (tarot_card_id, moon_data_id) accept null to clear
+ *  - moonSnapshot accepts null to clear
+ *  - Dynamically builds a parameterized UPDATE; sets updated_at = NOW()
  *
- * Request: any subset of { title, body, moon_data_id, tarot_card_id, moonSnapshot }
- *   - To clear FKs/snapshot, send null for that field
+ * Request (any subset):
+ *  { title?, body?, tarot_card_id?, moon_data_id?, moonSnapshot? }
  *
  * Responses:
  *  - 200 { entry }
@@ -176,6 +187,24 @@ router.patch("/:id", requireAuth, async (req, res, next) => {
       return res.status(400).json({ error: "Invalid id" });
 
     const payload = updateSchema.parse(req.body);
+
+    // Optional FK checks before update (only when non-null values provided)
+    if (payload.tarot_card_id !== undefined && payload.tarot_card_id !== null) {
+      const { rowCount } = await pool.query(
+        "SELECT 1 FROM tarot_cards WHERE id = $1",
+        [payload.tarot_card_id]
+      );
+      if (!rowCount)
+        return res.status(400).json({ error: "Invalid tarot_card_id" });
+    }
+    if (payload.moon_data_id !== undefined && payload.moon_data_id !== null) {
+      const { rowCount } = await pool.query(
+        "SELECT 1 FROM moon_data WHERE id = $1",
+        [payload.moon_data_id]
+      );
+      if (!rowCount)
+        return res.status(400).json({ error: "Invalid moon_data_id" });
+    }
 
     // Build dynamic SET list safely
     const fields = [];
@@ -205,14 +234,18 @@ router.patch("/:id", requireAuth, async (req, res, next) => {
       );
     }
 
+    // Ensure we are actually updating something (should be guaranteed by schema)
+    if (fields.length === 0) {
+      return res.status(400).json({ error: "No fields to update" });
+    }
+
     fields.push(`updated_at = NOW()`);
 
     const { rows } = await pool.query(
       `UPDATE journal
           SET ${fields.join(", ")}
         WHERE id = $${idx} AND user_id = $${idx + 1}
-        RETURNING id, user_id, title, body, tarot_card_id, moon_data_id, moon_snapshot,
-                  created_at, updated_at`,
+        RETURNING id, user_id, title, body, tarot_card_id, moon_data_id, moon_snapshot, created_at, updated_at`,
       [...values, id, req.user.id]
     );
 
@@ -246,8 +279,9 @@ router.patch("/:id", requireAuth, async (req, res, next) => {
 router.delete("/:id", requireAuth, async (req, res, next) => {
   try {
     const id = Number(req.params.id);
-    if (!Number.isInteger(id) || id <= 0)
+    if (!Number.isInteger(id) || id <= 0) {
       return res.status(400).json({ error: "Invalid id" });
+    }
 
     const { rowCount } = await pool.query(
       `DELETE FROM journal
@@ -255,8 +289,9 @@ router.delete("/:id", requireAuth, async (req, res, next) => {
       [id, req.user.id]
     );
 
-    if (rowCount === 0)
+    if (rowCount === 0) {
       return res.status(404).json({ error: "Entry not found" });
+    }
     res.json({ ok: true });
   } catch (err) {
     next(err);

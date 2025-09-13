@@ -1,11 +1,19 @@
+/**
+ * Integration tests for Moon routes.
+ *
+ * These tests stub the upstream Moon API with nock to avoid real HTTP requests.
+ * They verify that our Express routes handle both success and error cases,
+ * including validation and upstream failures.
+ */
+
 import request from "supertest";
 import nock from "nock";
 import app from "../../src/app.js";
 import { MOON_API_URL } from "../../src/config.js";
 
-// Base URL for stubbing the upstream Moon API.
-// Prefer env override (used in CI) and fall back to the app's configured URL.
-const base = process.env.MOON_API_BASE || MOON_API_URL;
+// Parse configured API URL into host + path for nock.
+const { origin, pathname } = new URL(MOON_API_URL || "http://moon.test.local");
+const path = pathname || "/";
 
 beforeAll(() => {
   // Block real outbound HTTP during tests; only allow localhost (supertest).
@@ -25,18 +33,16 @@ afterAll(() => {
 
 describe("Moon routes", () => {
   test("GET /moon/today with lat/lon returns 200", async () => {
-    // Stub ANY GET to the upstream Moon API base; return a minimal OK payload.
-    // Using /.*/ keeps the test decoupled from query param details.
-    nock(base)
-      .get(/.*/)
+    // Stub upstream Moon API for today's query.
+    nock(origin)
+      .get(path)
+      .query(true) // accept any query string (apiKey, date, lat, etc.)
       .reply(200, {
         date: "2025-08-23",
         phase: "Full Moon",
-        location: {
-          lat: 43.615,
-          lon: -116.202,
-          city: "Boise",
-        },
+        moonrise: "17:23",
+        moonset: "02:41",
+        location: { lat: 43.615, lon: -116.202, city: "Boise" },
       });
 
     const res = await request(app)
@@ -58,8 +64,10 @@ describe("Moon routes", () => {
   });
 
   test("GET /moon/on?date=YYYY-MM-DD&location=Boise returns 200", async () => {
-    nock(base)
-      .get(/.*/)
+    // Stub upstream Moon API for specific date + location query.
+    nock(origin)
+      .get(path)
+      .query(true)
       .reply(200, {
         date: "2025-08-23",
         phase: "Waning",
@@ -82,7 +90,7 @@ describe("Moon routes", () => {
 
   test("Upstream failure maps to 5xx", async () => {
     // Simulate upstream 503; route should surface a 5xx to the client.
-    nock(base).get(/.*/).reply(503, { error: "down" });
+    nock(origin).get(path).query(true).reply(503, { error: "down" });
 
     const res = await request(app).get("/moon/today?lat=43&lon=-116");
     expect(res.status).toBeGreaterThanOrEqual(500);

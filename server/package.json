@@ -5,15 +5,15 @@
   "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "test": "dotenv -e .env.test -- cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
-    "test:watch": "dotenv -e .env.test -- cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --watch",
-    "test:cov": "dotenv -e .env.test -- cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "test": "npm run db:schema:test && npm run db:migrate:test && echo '=== db ready ===' && cross-env NODE_ENV=test DOTENV_CONFIG_PATH=.env.test NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
+    "test:watch": "npm run db:schema:test && npm run db:migrate:test && cross-env NODE_ENV=test DOTENV_CONFIG_PATH=.env.test NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test:cov": "npm run db:schema:test && npm run db:migrate:test && cross-env NODE_ENV=test DOTENV_CONFIG_PATH=.env.test NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "dev": "nodemon --env-file .env src/server.js",
     "db:create": "dotenv -e .env -- sh -c 'createdb lunara || true'",
     "db:schema": "dotenv -e .env -- sh -c 'psql \"$DB_URL\" -f sql/schema.sql'",
-    "db:seed": "dotenv -e .env -- sh -c 'psql \"$DB_URL\" -f sql/seed.sql'",
     "db:schema:test": "dotenv -e .env.test -- sh -c 'psql \"${DB_URL:-$DATABASE_URL}\" -v ON_ERROR_STOP=1 -f sql/schema.sql'",
-    "migrate": "psql \"$DATABASE_URL\" -f migrations/2025-09-11_add_user_status.sql"
+    "db:migrate": "dotenv -e .env -- sh -c 'for f in sql/migrations/*.sql; do [ -e \"$f\" ] && psql \"${DB_URL:-$DATABASE_URL}\" -v ON_ERROR_STOP=1 -f \"$f\"; done; for f in migrations/*.sql; do [ -e \"$f\" ] && psql \"${DB_URL:-$DATABASE_URL}\" -v ON_ERROR_STOP=1 -f \"$f\"; done; true'",
+    "db:migrate:test": "dotenv -e .env.test -- sh -c 'for f in sql/migrations/*.sql; do [ -e \"$f\" ] && psql \"${DB_URL:-$DATABASE_URL}\" -v ON_ERROR_STOP=1 -f \"$f\"; done; for f in migrations/*.sql; do [ -e \"$f\" ] && psql \"${DB_URL:-$DATABASE_URL}\" -v ON_ERROR_STOP=1 -f \"$f\"; done; true'"
   },
   "keywords": [],
   "author": "",

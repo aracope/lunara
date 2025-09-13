@@ -56,7 +56,7 @@ export default function Journal() {
       if (attachMoon) {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
         const date_ymd = new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: tz }).format(new Date());
-        payload.moonRef = { date_ymd, tz };
+        payload.moonSnapshot = { date_ymd, tz };
       }
       await api.createJournal(payload);
       setTitle('');
@@ -75,7 +75,7 @@ export default function Journal() {
 
         <label className="chip">
           <input type="checkbox" checked={attachMoon} onChange={(e) => setAttachMoon(e.target.checked)} />
-          <span>Attach today’s moon</span>
+          <span>Attach today's moon</span>
         </label>
 
         <button>Add</button>
@@ -86,7 +86,7 @@ export default function Journal() {
         {entries.map(e => (
           <li key={e.id} className="journal-item">
             <div><strong>{e.title}</strong> — {e.body}</div>
-            {e.moon_data_id && <JournalMoon refData={e.moon_data_id} />}
+            {e.moon_snapshot && <JournalMoon snapshot={e.moon_snapshot} />}
           </li>
         ))}
       </ul>
