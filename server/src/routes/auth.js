@@ -99,34 +99,29 @@ router.post("/register", async (req, res, next) => {
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    try {
-      const { rows } = await pool.query(
-        `INSERT INTO users (email, password_hash, display_name)
-         VALUES ($1, $2, $3)
-         RETURNING id, email, display_name, created_at`,
-        [email.toLowerCase(), passwordHash, displayName || null]
-      );
-      const user = rows[0];
+    // Upsert-safe insert: avoid throwing unique-violation errors by using ON CONFLICT.
+    // This uses your functional unique constraint name (users_email_lower_unique).
+    // If there is a conflict, DO NOTHING and we'll detect that by the lack of returning rows.
+    const { rows } = await pool.query(
+      `INSERT INTO users (email, password_hash, display_name)
+       VALUES ($1, $2, $3)
+       ON CONFLICT ON CONSTRAINT users_email_lower_unique
+       DO NOTHING
+       RETURNING id, email, display_name, created_at`,
+      [email.toLowerCase(), passwordHash, displayName || null]
+    );
 
-      const token = signJwt({ sub: user.id });
-      res.cookie("token", token, cookieOpts());
-      return res.status(201).json({ user });
-    } catch (err) {
-      // Map unique-violation to a clear 409 even if the functional index fires
-      if (
-        err?.code === "23505" &&
-        (err?.constraint === "users_email_lower_unique" ||
-          err?.constraint === "users_email_key" ||
-          (typeof err?.detail === "string" &&
-            err.detail.includes("(lower(email))")))
-      ) {
-        return res.status(409).json({
-          error: "That email is already registered.",
-          field: "email",
-        });
-      }
-      throw err;
+    if (!rows || rows.length === 0) {
+      // No row returned -> conflict occurred (another process inserted same normalized email)
+      return res
+        .status(409)
+        .json({ error: "That email is already registered.", field: "email" });
     }
+
+    const user = rows[0];
+    const token = signJwt({ sub: user.id });
+    res.cookie("token", token, cookieOpts());
+    return res.status(201).json({ user });
   } catch (err) {
     return next(err);
   }
