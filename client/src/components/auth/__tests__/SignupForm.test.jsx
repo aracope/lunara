@@ -11,6 +11,15 @@ vi.mock("../../../context/AuthContext.jsx", () => ({
     useAuth: () => ({ signup: signupMock }),
 }));
 
+// ---- Mock react-router useNavigate
+let navigateMock = vi.fn();
+vi.mock("react-router-dom", async () => {
+    const actual = await vi.importActual("react-router-dom");
+    return {
+        ...actual,
+        useNavigate: () => navigateMock,
+    };
+});
 
 function setup() {
     render(<SignupForm />);
@@ -33,8 +42,8 @@ describe("SignupForm", () => {
         expect(signupMock).not.toHaveBeenCalled();
     });
 
-    test("calls signup with trimmed displayName", async () => {
-        signupMock.mockResolvedValueOnce({ ok: true });
+    test("calls signup with trimmed displayName and navigates to dashboard", async () => {
+        signupMock.mockResolvedValueOnce({ email: "ara@example.com" });
         setup();
 
         fireEvent.change(screen.getByLabelText(/email/i), {
@@ -55,6 +64,9 @@ describe("SignupForm", () => {
                 "passpass123",
                 "Ara"
             );
+            expect(navigateMock).toHaveBeenCalledWith("/dashboard", {
+                state: { flash: "Welcome, ara@example.com!" },
+            });
         });
     });
 
@@ -77,6 +89,7 @@ describe("SignupForm", () => {
                 "passpass123",
                 undefined
             );
+            expect(navigateMock).toHaveBeenCalled();
         });
     });
 
@@ -95,6 +108,7 @@ describe("SignupForm", () => {
 
         const status = await screen.findByRole("status");
         expect(status).toHaveTextContent(/email already in use/i);
+        expect(navigateMock).not.toHaveBeenCalled();
     });
 
     test("validates displayName length", async () => {

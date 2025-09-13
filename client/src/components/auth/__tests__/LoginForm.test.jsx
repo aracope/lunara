@@ -65,7 +65,9 @@ describe("LoginForm", () => {
 
         await waitFor(() => {
             expect(loginMock).toHaveBeenCalledWith("ara@example.com", "passpass123");
-            expect(navigateMock).toHaveBeenCalledWith("/dashboard");
+            expect(navigateMock).toHaveBeenCalledWith("/dashboard", {
+                state: { flash: "Welcome back, ara@example.com!" },
+            });
         });
     });
 

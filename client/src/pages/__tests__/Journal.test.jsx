@@ -87,16 +87,20 @@ describe("Journal", () => {
         fireEvent.click(screen.getByRole("button", { name: /add/i }));
 
         await waitFor(() => {
-            expect(api.createJournal).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    moonRef: expect.objectContaining({
-                        date_ymd: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
-                        tz: expect.any(String),
-                    }),
-                })
-            );
+            // Grab the payload we sent to the API
+            const payload = api.createJournal.mock.calls[0][0];
+
+            // Backward-compat: support either moonSnapshot (new) or moonRef (old)
+            const snapshot = payload.moonSnapshot ?? payload.moonRef;
+
+            expect(snapshot).toMatchObject({
+                date_ymd: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+                tz: expect.any(String),
+            });
         });
+
     });
+
 
     test("does not attach moonRef when checkbox is unchecked", async () => {
         api.listJournal.mockResolvedValueOnce({ entries: [] });
