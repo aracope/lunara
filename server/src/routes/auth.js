@@ -110,16 +110,16 @@ router.post("/register", async (req, res, next) => {
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    // Upsert-safe insert: avoid throwing unique-violation errors by using ON CONFLICT.
-    // This uses your functional unique constraint name (users_email_lower_unique).
-    // If there is a conflict, DO NOTHING and we'll detect that by the lack of returning rows.
+    // Upsert-safe insert: ensures unique emails (case-insensitive) without throwing errors.
+    // The email column is now 'citext', so duplicates are detected case-insensitively.
+    // If a conflict occurs, DO NOTHING and we can detect it by the lack of returned rows.
     const { rows } = await pool.query(
       `INSERT INTO users (email, password_hash, display_name)
-       VALUES ($1, $2, $3)
-       ON CONFLICT ON CONSTRAINT users_email_lower_unique
-       DO NOTHING
-       RETURNING id, email, display_name, created_at`,
-      [email.toLowerCase(), passwordHash, displayName || null]
+   VALUES ($1, $2, $3)
+   ON CONFLICT ON CONSTRAINT users_email_unique
+   DO NOTHING
+   RETURNING id, email, display_name, created_at`,
+      [email, passwordHash, displayName || null]
     );
 
     if (!rows || rows.length === 0) {

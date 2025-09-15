@@ -135,14 +135,15 @@ export default function Tarot() {
     <section className="tarot">
       <header className="tarot-hero">
         <h1 className="metal-text">Tarot</h1>
-        <p className="tarot-subtitle">Draw a daily card, ask a yes/no, or browse a specific card.</p>
+        {/* , ask a yes/no, or browse a specific card */}
+        <p className="tarot-subtitle">Draw a daily card.</p>
       </header>
 
       <div className="tarot-actions">
         <button className="btn btn--metal" onClick={pullDaily}>
           Card of the day
         </button>
-
+        {/*
         <form className="tarot-yesno" onSubmit={askYesNo}>
           <input name="q" placeholder="Ask a yes/no question" />
           <button className="btn btn--metal-dark" type="submit">Yes / No</button>
@@ -150,25 +151,25 @@ export default function Tarot() {
         <form className="tarot-byid" onSubmit={fetchSelectedCard}>
           <label className="sr-only" htmlFor="tarot-card-select">Choose a card</label>
 
-          <select
+           <select
             id="tarot-card-select"
             className="tarot-select"
             value={selectedId}
             onChange={(e) => setSelectedId(e.target.value)}
           >
-            <option value="" disabled>Pick a card…</option>
+            <option value="" disabled>Pick a card…</option> */}
 
-            {/* Major Arcana */}
-            {majors.length > 0 && (
+        {/* Major Arcana */}
+        {/* {majors.length > 0 && (
               <optgroup label="— Major Arcana —">
                 {majors.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </optgroup>
-            )}
+            )} */}
 
-            {/* Minor by suit */}
-            {['Cups', 'Swords', 'Wands', 'Pentacles'].map(suit => (
+        {/* Minor by suit */}
+        {/* {['Cups', 'Swords', 'Wands', 'Pentacles'].map(suit => (
               bySuit[suit] && bySuit[suit].length > 0 ? (
                 <optgroup key={suit} label={`— Minor — ${suit} —`}>
                   {bySuit[suit].map(c => (
@@ -177,12 +178,12 @@ export default function Tarot() {
                 </optgroup>
               ) : null
             ))}
-          </select>
+          </select> 
 
           <button className="btn btn-outline" type="submit" disabled={!selectedId}>
             Get card
           </button>
-        </form>
+        </form>*/}
       </div>
 
       <div className="tarot-grid">

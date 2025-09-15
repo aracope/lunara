@@ -73,10 +73,10 @@ export default function Journal() {
         <input value={title} onChange={e => setTitle(e.target.value)} placeholder="title" />
         <textarea value={body} onChange={e => setBody(e.target.value)} placeholder="body" rows={4} />
 
-        <label className="chip">
+        {/* <label className="chip">
           <input type="checkbox" checked={attachMoon} onChange={(e) => setAttachMoon(e.target.checked)} />
           <span>Attach today's moon</span>
-        </label>
+        </label> */}
 
         <button>Add</button>
       </form>
